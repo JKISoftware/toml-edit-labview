@@ -1,6 +1,9 @@
 # toml-edit-labview
 A LabVIEW wrapper around the rust `toml_edit` library (built into a DLL).
 
+[![Rust](https://github.com/JKISoftware/toml-edit-labview/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JKISoftware/toml-edit-labview/actions/workflows/rust.yml)
+![LabVIEW Version](https://img.shields.io/badge/LabVIEW-2020%20SP1-%23E37725.svg?})
+
 ## Development
 
 ### Install Rust
