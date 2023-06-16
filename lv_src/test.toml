@@ -13,7 +13,7 @@ ni-daqmx = { version = "1.0" , url = "ni.com" , "" = "" }
 [vipm]
 
 [vipm.dependencies]
-oglib_array = { version = "version" }
+oglib_array = { version = "6.5.4", url = "https://jki.net"}
 oglib_string = "3.1.4"
 
 

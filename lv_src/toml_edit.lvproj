@@ -32,8 +32,7 @@
 				<Item Name="Clear Errors.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Clear Errors.vi"/>
 			</Item>
 			<Item Name="dragon_toml_64.dll" Type="Document" URL="../dragon_toml_64.dll"/>
-			<Item Name="free_c_string_at_memory_address.vi" Type="VI" URL="../free_c_string_at_memory_address.vi"/>
-			<Item Name="read_c_string_at_memory_address.vi" Type="VI" URL="../read_c_string_at_memory_address.vi"/>
+			<Item Name="get_value_string_by_name.vi" Type="VI" URL="../InlineTable/get_value_string_by_name.vi"/>
 		</Item>
 		<Item Name="Build Specifications" Type="Build"/>
 	</Item>

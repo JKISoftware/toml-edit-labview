@@ -811,15 +811,15 @@ pub extern "C" fn toml_edit_get_value_inline_table (
 // takes a toml_edit::InlineTable as input
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_inline_table_keynames (
-    table: *mut c_void,
+pub extern "C" fn toml_edit_inline_table_list_items (
+    inline_table: *mut c_void,
 ) -> *mut c_char {
-    let table = unsafe { &mut *(table as *mut toml_edit::InlineTable) };
+    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
 
     let mut return_string = String::new();
 
-    for (key, _) in table.iter() {
-        return_string.push_str(&key);
+    for (key, _) in inline_table.iter() {
+        return_string.push_str(key);
         return_string.push_str("\n");
     }
 
@@ -832,6 +832,38 @@ pub extern "C" fn toml_edit_inline_table_keynames (
     };
 
     return raw_string;
+}
+
+// dll exported function to get an toml_edit::Value from a toml_edit::InlineTable
+// takes a toml_edit::InlineTable as input and a *const c_char as the keyname
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_inline_table_get_item (
+    inline_table: *mut c_void,
+    key: *const c_char,
+) -> *mut c_void {
+    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
+
+    let key = match unsafe { CStr::from_ptr(key).to_str() } {
+        Ok(key) => key,
+        Err(_) => {
+            println!("Unable to convert key to string");
+            return ptr::null_mut();
+        }
+    };
+
+    let (_, item) = match inline_table.get_key_value(key) {
+        Some(key_value_pair) => key_value_pair,
+        None => {
+            println!("Key not found");
+            return ptr::null_mut();
+        }
+    };
+
+    let item = Box::new(item.clone());
+
+    Box::into_raw(item) as *mut c_void
+
 }
 
 
