@@ -1,0 +1,5 @@
+[project]
+labview-version = "2020"
+
+[vipm.dependencies]
+oglib_string = "5.0.0.25"

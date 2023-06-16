@@ -1,0 +1,20 @@
+
+[project.stuff]
+name = "jim's project"
+version = "0.1.0"
+
+[nipm]
+version = "1.2.3"
+
+[nipm.dependencies]
+my_package2 = { version = "1.2.3" }
+ni-daqmx = { version = "1.0" , url = "ni.com" , "" = "" }
+
+[vipm]
+
+[vipm.dependencies]
+oglib_array = { version = "version" }
+oglib_string = "3.1.4"
+
+
+
