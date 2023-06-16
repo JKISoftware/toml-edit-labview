@@ -33,3 +33,12 @@ jobs:
         cargo build --target=${{ matrix.target }} --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.target }}
+        path: |
+          target/${{ matrix.target }}/release/toml.dll
+          target/${{ matrix.target }}/debug/toml.dll
+          target/${{ matrix.target }}/release/toml.so
+          target/${{ matrix.target }}/debug/toml.so
