@@ -20,10 +20,10 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             runs-on: ubuntu-latest
-          - target: x86_64-pc-windows-msvc
-            runs-on: windows-latest
-          - target: i686-pc-windows-msvc
-            runs-on: windows-latest
+#          - target: x86_64-pc-windows-msvc
+#            runs-on: windows-latest
+#          - target: i686-pc-windows-msvc
+#            runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v3
@@ -38,7 +38,8 @@ jobs:
       with:
         name: ${{ matrix.target }}
         path: |
-          target/${{ matrix.target }}/release/toml.dll
-          target/${{ matrix.target }}/debug/toml.dll
-          target/${{ matrix.target }}/release/toml.so
-          target/${{ matrix.target }}/debug/toml.so
+          target/${{ matrix.target }}/debug/**/*
+#          target/${{ matrix.target }}/release/toml.dll
+#          target/${{ matrix.target }}/debug/toml.dll
+#          target/${{ matrix.target }}/release/toml.so
+#          target/${{ matrix.target }}/debug/toml.so
