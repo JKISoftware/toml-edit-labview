@@ -17,20 +17,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        build-type:
+          - debug
+          - release
         include:
           - target: x86_64-unknown-linux-gnu
             runs-on: ubuntu-latest
-#          - target: x86_64-pc-windows-msvc
-#            runs-on: windows-latest
-#          - target: i686-pc-windows-msvc
-#            runs-on: windows-latest
+            shared-lib-extension: so
+          - target: x86_64-pc-windows-msvc
+            runs-on: windows-latest
+            shared-lib-extension: dll
+          - target: i686-pc-windows-msvc
+            runs-on: windows-latest
+            shared-lib-extension: dll
 
     steps:
     - uses: actions/checkout@v3
     - name: Build
       run: |
         rustup target add ${{ matrix.target }}
-        cargo build --target=${{ matrix.target }} --verbose
+        cargo build --target=${{ matrix.target }} --verbose --${{ matrix.build-type }}
     - name: Run tests
       run: cargo test --verbose
     - name: Upload artifact
@@ -38,8 +44,4 @@ jobs:
       with:
         name: ${{ matrix.target }}
         path: |
-          target/${{ matrix.target }}/debug/**/*
-#          target/${{ matrix.target }}/release/toml.dll
-#          target/${{ matrix.target }}/debug/toml.dll
-#          target/${{ matrix.target }}/release/toml.so
-#          target/${{ matrix.target }}/debug/toml.so
+          target/${{ matrix.target }}/${{ matrix.build-type }}/*toml.${{ matrix.shared-lib-extension }}
