@@ -42,4 +42,4 @@ jobs:
       with:
         name: ${{ matrix.target }}
         path: |
-          target/${{ matrix.target }}/${{ matrix.build-type }}/*toml.${{ matrix.shared-lib-extension }}
+          target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*toml.${{ matrix.shared-lib-extension }}
