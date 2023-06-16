@@ -14,9 +14,19 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - i686-pc-windows-gnu
+          - x86_64-pc-windows-gnu
+          - x86_64-unknown-linux-musl          
+
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
+    - name: Build (${{ matrix.target }})
+      run: |
+        rustup target add ${{ matrix.target }}
+        cargo build --target=i686-pc-windows-msvc --verbose
     - name: Run tests
       run: cargo test --verbose
