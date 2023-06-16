@@ -27,7 +27,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build (${{ matrix.target }})
+    - name: Build
       run: |
         rustup target add ${{ matrix.target }}
         cargo build --target=${{ matrix.target }} --verbose
