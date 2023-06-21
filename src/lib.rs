@@ -451,7 +451,7 @@ pub extern "C" fn toml_edit_doc_from_string (
         }
     };
 
-    let doc = Box::new(doc);
+    let doc: Box<Document> = Box::new(doc);
 
     Box::into_raw(doc) as *mut c_void
 }
