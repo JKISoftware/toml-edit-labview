@@ -4,6 +4,16 @@ A LabVIEW wrapper around the Rust [toml_edit](https://docs.rs/toml_edit/latest/t
 [![Rust](https://github.com/JKISoftware/toml-edit-labview/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JKISoftware/toml-edit-labview/actions/workflows/rust.yml)
 ![LabVIEW Version](https://img.shields.io/badge/LabVIEW-2020%20SP1-%23E37725.svg?})
 
+## Current Status --> Alpha / Experimental
+
+## Key Features
+Not all of these are available right now, but will be coming over time (see Roadmap, below).
+
+- Built on top of a production-quality toml library ([toml_edit](https://docs.rs/toml_edit/latest/toml_edit/)) that's written in [Rust](https://www.rust-lang.org/).
+- Provides a simple-to-use API that feels a bit like LabVIEW's config file VIs
+- Provides a low-level API that exposes all the features of TOML that you might need for reading and writing to toml files.
+- Cross-platform support for LabVIEW 32-bit and 64-bit on Windows, Mac, Linux, and NI-Linux Real-time.
+
 ## Goals of this Project
 - To provide a cross-platform, production-quality, [toml](https://toml.io/) file library in LabVIEW
   - To support/preserve comments and other user formatting in the TOML data.
