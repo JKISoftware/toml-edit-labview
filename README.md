@@ -40,7 +40,9 @@ A LabVIEW wrapper around the Rust [toml_edit](https://docs.rs/toml_edit/latest/t
 
 ## Development System Setup
 
-Installation details: [rust-lang.org](https://forge.rust-lang.org)
+See our [Developer Docs](docs/developer/index.md) for lots more info.
+
+Rust Installation details: [rust-lang.org](https://forge.rust-lang.org)
 
 ### Windows Setup
 
