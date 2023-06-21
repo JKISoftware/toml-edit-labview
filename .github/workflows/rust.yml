@@ -34,7 +34,7 @@ jobs:
             bitness: 64
           - target: x86_64-apple-darwin
             runs-on: macos-latest
-            shared-lib-extension: framework.zip
+            shared-lib-extension: dylib
             bitness: 64
 
     steps:
@@ -44,14 +44,14 @@ jobs:
         rustup target add ${{ matrix.target }}
         cargo build --target=${{ matrix.target }} --verbose --${{ env.BUILD_TYPE }}
         pushd target/${{ matrix.target }}/${{ env.BUILD_TYPE }}
-        mv *.${{ matrix.shared-lib-extension }} ${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
-    - name: Bundle Framework
+        mv *.dylib ${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
+    - name: Bundle MacOS Framework
       if: ${{ matrix.target == 'x86_64-apple-darwin' }}
       run: |
         BUILD_TYPE=${{ env.BUILD_TYPE }}
         SHARED_LIBARY_NAME=${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
         BUILD_OUTPUT_DIR=target/${{ matrix.target }}/${{ env.BUILD_TYPE }}
-        FRAMEWORK_NAME=dragon_toml_64
+        FRAMEWORK_NAME=${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}
         pushd $BUILD_OUTPUT_DIR
         rm -rf $FRAMEWORK_NAME.framework
         mkdir -p $FRAMEWORK_NAME.framework/Versions/A
@@ -72,3 +72,12 @@ jobs:
         if-no-files-found: error
         path: |
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.${{ matrix.shared-lib-extension }}
+          
+    - name: Upload MacOS Framework artifact
+      if: ${{ matrix.target == 'x86_64-apple-darwin' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: shared-library
+        if-no-files-found: error
+        path: |
+          target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.framework
