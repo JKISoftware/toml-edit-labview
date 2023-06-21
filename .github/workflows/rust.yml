@@ -31,7 +31,7 @@ jobs:
           - target: i686-pc-windows-msvc
             runs-on: windows-latest
             shared-lib-extension: dll
-            bitness: 64
+            bitness: 32
           - target: x86_64-apple-darwin
             runs-on: macos-latest
             shared-lib-extension: dylib
