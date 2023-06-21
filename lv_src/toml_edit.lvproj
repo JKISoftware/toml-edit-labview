@@ -14,11 +14,15 @@
 		<Property Name="server.vi.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
 		<Item Name="tests" Type="Folder">
+			<Item Name="dragon tests" Type="Folder" URL="../tests/dragon tests">
+				<Property Name="NI.DISK" Type="Bool">true</Property>
+				<Property Name="NI.SortType" Type="Int">0</Property>
+			</Item>
 			<Item Name="test_subtable_write_key_string.vi" Type="VI" URL="../tests/test_subtable_write_key_string.vi"/>
-			<Item Name="test_write_key_string.vi" Type="VI" URL="../tests/test_write_key_string.vi"/>
-			<Item Name="test_write_key_integer.vi" Type="VI" URL="../tests/test_write_key_integer.vi"/>
-			<Item Name="all_tests.vi" Type="VI" URL="../toml/support/all_tests.vi"/>
+			<Item Name="test_rw_string.vi" Type="VI" URL="../tests/test_rw_string.vi"/>
+			<Item Name="test_rw_integer.vi" Type="VI" URL="../tests/test_rw_integer.vi"/>
 			<Item Name="test_inline_table_write_key_string.vi" Type="VI" URL="../tests/test_inline_table_write_key_string.vi"/>
+			<Item Name="all_tests.vi" Type="VI" URL="../toml/support/all_tests.vi"/>
 		</Item>
 		<Item Name="toml.lvclass" Type="LVClass" URL="../toml/toml.lvclass"/>
 		<Item Name="toml_edit.lvlib" Type="Library" URL="../toml_edit.lvlib"/>
@@ -408,6 +412,7 @@
 				<Item Name="Dflt Data Dir.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/file.llb/Dflt Data Dir.vi"/>
 				<Item Name="NI_LVConfig.lvlib" Type="Library" URL="/&lt;vilib&gt;/Utility/config.llb/NI_LVConfig.lvlib"/>
 				<Item Name="8.6CompatibleGlobalVar.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/8.6CompatibleGlobalVar.vi"/>
+				<Item Name="Assert Integer Type.vim" Type="VI" URL="/&lt;vilib&gt;/Utility/TypeAssert/Assert Integer Type.vim"/>
 			</Item>
 			<Item Name="dragon_toml_64.dll" Type="Document" URL="../dragon_toml_64.dll"/>
 		</Item>

@@ -661,6 +661,45 @@ pub extern "C" fn toml_edit_table_list_items (
     return raw_string;
 }
 
+// dll exported function to remove an item from a toml_edit::Table
+// takes a toml_edit::Table and a item name as inputs
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_table_remove_item (
+    table: *mut c_void,
+    key: *const c_char,
+) -> u64 {
+    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let key = unsafe { CStr::from_ptr(key).to_string_lossy().into_owned() };
+
+    return if table.contains_key(key.as_str()) {
+        table.remove(key.as_str());
+        1
+    } else {
+        0
+    }
+}
+
+// dll exported function to remove an item from a toml_edit::InlineTable
+// takes a toml_edit::InlineTable and a item name as inputs
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_inline_table_remove_item (
+    inline_table: *mut c_void,
+    item_name: *const c_char,
+) -> u64 {
+    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
+    let item_name = unsafe { CStr::from_ptr(item_name).to_string_lossy().into_owned() };
+
+    return if inline_table.contains_key(item_name.as_str()) {
+        inline_table.remove(item_name.as_str());
+        1
+    } else {
+        0
+    }
+}
+
+
 // dll exported function to return a pointer to a toml_edit::Item, which can be used in other .dll functions
 // takes a toml_edit::Table and a item name as inputs
 #[allow(dead_code)]
@@ -894,6 +933,30 @@ pub extern "C" fn toml_edit_new_value_i64 (
     Box::into_raw(item) as *mut c_void
 }
 
+// dll exported function to create a new, empty Value::InlineTable
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_new_value_inline_table (
+) -> *mut c_void {
+    let item = toml_edit::value(toml_edit::InlineTable::default());
+
+    let item = Box::new(item);
+
+    Box::into_raw(item) as *mut c_void
+}
+
+// dll exported function to create a new, empty toml_edit::Table
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_new_table (
+) -> *mut c_void {
+    let table = toml_edit::Table::default();
+
+    let table = Box::new(table);
+
+    Box::into_raw(table) as *mut c_void
+}
+
 
 // dll exported function to check if an item exists in a table
 // takes a *const c_char as input
@@ -902,11 +965,27 @@ pub extern "C" fn toml_edit_new_value_i64 (
 pub extern "C" fn toml_edit_table_contains_item (
     table: *mut c_void,
     key: *const c_char,
-) -> bool {
+) -> i64 {
     let table = unsafe { &mut *(table as *mut toml_edit::Table) };
     let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
 
-    table.contains_key(key)
+    return if table.contains_key(key) { 1 } else { 0 };
+
+}
+
+// dll exported function to check if an item exists in an inline table
+// takes a *const c_char as input
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_inline_table_contains_item (
+    table: *mut c_void,
+    key: *const c_char,
+) -> i64 {
+    let table = unsafe { &mut *(table as *mut toml_edit::InlineTable) };
+    let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
+
+    return if table.contains_key(key) { 1 } else { 0 };
+
 }
 
 // dll exported function to set a toml_edit::Item in a toml_edit::Table
