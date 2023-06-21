@@ -1,440 +1,24 @@
 use libc::c_char;
-use std::ffi::{
-    CStr,
-    CString,
-    c_void,
+use std::{
+    // error::Error,
+    ffi::{
+        CStr,
+        CString,
+        c_void,
+    },
+    // fs,
+    ptr,
+    str::FromStr
 };
-use std::{fs, ptr};
 use toml_edit::{
     Document,
-    Table,
+    InlineTable,
     Item,
+    Table,
     Value,
-    Formatted,
 };
-use std::error::Error;
-use std::str::FromStr;
 
-// declare an enum for the package manager: nipm or vipm.
-enum PackageManager {
-    NIPM,
-    VIPM,
-}
-
-fn parse_package_manager(package_manager: &str) -> Result<PackageManager, &'static str> {
-    match package_manager {
-        "nipm" => Ok(PackageManager::NIPM),
-        "vipm" => Ok(PackageManager::VIPM),
-        _ => Err("Invalid package_manager argument")
-    }
-}
-
-fn toml_set_package_attribute_string(
-    toml_str: String,
-    package_manager: PackageManager,
-    package_name: &str,
-    attribute_name: &str,
-    attribute_value: &str,
-) -> Result<String, Box<dyn Error>> {
-    const MGR_TABLE_NAME: [&str; 2] = ["nipm", "vipm"];
-    const DEPS_SUBTABLE_NAME: &str = "dependencies";
-    const VERSION_SUBKEY_NAME: &str = "version";
-
-    let mgr_table_name = MGR_TABLE_NAME[package_manager as usize];
-
-    let mut doc = toml_str.parse::<Document>()?;
-
-    // we should initialize these tables if they don't yet exist
-    if !doc.contains_table(mgr_table_name) {
-        doc[mgr_table_name] = Item::Table(toml_edit::Table::new());
-    }
-    if !doc[mgr_table_name].as_table().unwrap().contains_table(DEPS_SUBTABLE_NAME) {
-        doc[mgr_table_name][DEPS_SUBTABLE_NAME] = Item::Table(toml_edit::Table::new());
-    }
-
-    let mgr_table = doc[mgr_table_name].as_table_mut().ok_or("Table not found")?;
-    let mgr_deps_table = mgr_table[DEPS_SUBTABLE_NAME].as_table_mut().ok_or("Dependencies table not found")?;
-
-    let already_is_inline_table = mgr_deps_table.contains_key(package_name) &&
-        mgr_deps_table[package_name].is_inline_table();
-
-    let is_version_attribute = attribute_name == VERSION_SUBKEY_NAME;
-
-    // use an inline table if the attribute_name is not the "version" or if it's already a subtable
-    let use_inline_table = already_is_inline_table || !is_version_attribute;
-
-    if use_inline_table {
-        // if the package_name is not already a subtable, then make it one
-        if !already_is_inline_table {
-            if mgr_deps_table.contains_key(package_name) {
-                let version_string = mgr_deps_table.remove(package_name).expect("Error reading version key").as_str().unwrap().to_string();
-                mgr_deps_table[package_name][VERSION_SUBKEY_NAME] = Item::Value(Value::String(Formatted::new(version_string)));
-            }
-        }
-        // add the attribute_name as a subkey
-        mgr_deps_table[package_name][attribute_name] = Item::Value(Value::String(Formatted::new(attribute_value.to_string())));
-    } else {
-        // add the package version as a regular string key
-        mgr_deps_table[package_name] = Item::Value(Value::String(Formatted::new(attribute_value.to_string())));
-    }
-
-    Ok(doc.to_string())
-}
-
-// a function that gets a string attribute of a package in a dependencies table.
-// If the package is a simple string, it assumed to be the "version" attribute.
-// If the package is a subtable, then the attribute is a subkey of the subtable.
-fn toml_get_package_attribute_string(
-    toml_str: String,
-    package_manager: PackageManager,
-    package_name: &str,
-    attribute_name: &str,
-) -> Result<String, Box<dyn Error>> {
-    const MGR_TABLE_NAME: [&str; 2] = ["nipm", "vipm"];
-    const DEPS_SUBTABLE_NAME: &str = "dependencies";
-    const VERSION_SUBKEY_NAME: &str = "version";
-
-    let mgr_table_name = MGR_TABLE_NAME[package_manager as usize];
-
-    let mut doc = toml_str.parse::<Document>()?;
-
-    let mgr_table = doc[mgr_table_name].as_table_mut().ok_or("Table not found")?;
-    let mgr_deps_table = mgr_table[DEPS_SUBTABLE_NAME].as_table_mut().ok_or("Dependencies table not found")?;
-
-    return if !mgr_deps_table.contains_key(package_name) {
-       Err("Package not found")?
-    } else if mgr_deps_table[package_name].is_inline_table() {
-        if !mgr_deps_table[package_name].as_inline_table().unwrap().contains_key(attribute_name) {
-            Err("Package attribute not found")?
-        } else {
-            Ok(mgr_deps_table[package_name][attribute_name].as_str().unwrap().to_string())
-        }
-    } else if attribute_name == VERSION_SUBKEY_NAME {
-        Ok(mgr_deps_table[package_name].as_str().unwrap().to_string())
-    } else {
-        Err("Package attribute not found")?
-    }
-}
-
-
-fn toml_remove_package_attribute(
-    toml_str: String,
-    package_manager: PackageManager,
-    package_name: &str,
-    attribute_name: &str,
-) -> Result<String, Box<dyn Error>> {
-    const MGR_TABLE_NAME: [&str; 2] = ["nipm", "vipm"];
-    const DEPS_SUBTABLE_NAME: &str = "dependencies";
-
-    let mgr_table_name = MGR_TABLE_NAME[package_manager as usize];
-
-    let mut doc = toml_str.parse::<Document>()?;
-
-    let mgr_table = doc[mgr_table_name].as_table_mut().ok_or("Table not found")?;
-    let mgr_deps_table = mgr_table[DEPS_SUBTABLE_NAME].as_table_mut().ok_or("Dependencies table not found")?;
-
-    return if !mgr_deps_table.contains_key(package_name) {
-       Err("Package not found")?
-    } else if mgr_deps_table[package_name].is_inline_table() {
-        if !mgr_deps_table[package_name].as_inline_table().unwrap().contains_key(attribute_name) {
-            Err("Package attribute not found")?
-        } else {
-            mgr_deps_table[package_name].as_inline_table_mut().unwrap().remove(attribute_name);
-            Ok(doc.to_string())
-        }
-    } else {
-        Err("Package attribute not found")?
-    }
-}
-
-
-fn get_manager_dependencies_table<'a>(
-    doc: &'a mut Document,
-    package_manager: PackageManager,
-) -> Result<&'a mut Table, Box<dyn Error>> {
-    const MGR_TABLE_NAME: [&str; 2] = ["nipm", "vipm"];
-    const DEPS_SUBTABLE_NAME: &str = "dependencies";
-
-    let mgr_table_name = MGR_TABLE_NAME[package_manager as usize];
-    let mgr_table = doc[mgr_table_name].as_table_mut().ok_or("Table not found")?;
-    let mgr_deps_table = mgr_table[DEPS_SUBTABLE_NAME].as_table_mut().ok_or("Dependencies table not found")?;
-
-    Ok(mgr_deps_table)
-}
-
-
-fn toml_remove_package(
-    toml_str: String,
-    package_manager: PackageManager,
-    package_name: &str
-) -> Result<String, Box<dyn Error>> {
-
-    let mut doc = toml_str.parse::<Document>()?;
-
-    let mgr_deps_table = match get_manager_dependencies_table(&mut doc, package_manager) {
-        Ok(table) => table,
-        Err(e) => return Err(e)
-    };
-
-    return if !mgr_deps_table.contains_key(package_name) {
-       Err("Package not found")?
-    } else {
-        mgr_deps_table.remove(package_name);
-        Ok(doc.to_string())
-    }
-}
-
-
-// a function that lists the packages for a given package manager, these are the keys in the dependencies table.
-fn toml_list_packages(
-    toml_str: String,
-    package_manager: PackageManager,
-) -> Result<String, Box<dyn Error>> {
-    const MGR_TABLE_NAME: [&str; 2] = ["nipm", "vipm"];
-    const DEPS_SUBTABLE_NAME: &str = "dependencies";
-
-    let mgr_table_name = MGR_TABLE_NAME[package_manager as usize];
-
-    let mut doc = toml_str.parse::<Document>()?;
-
-    // we should initialize these tables if they don't yet exist
-    if !doc.contains_table(mgr_table_name) {
-        doc[mgr_table_name] = Item::Table(toml_edit::Table::new());
-    }
-    if !doc[mgr_table_name].as_table().unwrap().contains_table(DEPS_SUBTABLE_NAME) {
-        doc[mgr_table_name][DEPS_SUBTABLE_NAME] = Item::Table(toml_edit::Table::new());
-    }
-
-    let mgr_table = doc[mgr_table_name].as_table_mut().ok_or("Table not found")?;
-    let mgr_deps_table = mgr_table[DEPS_SUBTABLE_NAME].as_table_mut().ok_or("Dependencies table not found")?;
-
-    let mut package_list = String::new();
-    for (package_name, _) in mgr_deps_table.iter() {
-        package_list.push_str(&format!("{}\n", package_name));
-    }
-
-    Ok(package_list)
-}
-
-#[allow(dead_code)]
-#[no_mangle]
-pub extern "C" fn set_package_attribute_string (
-    file_path: *const c_char,
-    package_manager: *const c_char,
-    package_name: *const c_char,
-    attribute_name: *const c_char,
-    value_string: *const c_char,
-) -> i32 {
-let file_path = unsafe { CStr::from_ptr(file_path).to_string_lossy().into_owned() };
-    let package_manager = unsafe { CStr::from_ptr(package_manager).to_string_lossy().into_owned() };
-    let package_name = unsafe { CStr::from_ptr(package_name).to_string_lossy().into_owned() };
-    let attribute_name = unsafe { CStr::from_ptr(attribute_name).to_string_lossy().into_owned() };
-    let value_string = unsafe { CStr::from_ptr(value_string).to_string_lossy().into_owned() };
-
-    let package_manager = match parse_package_manager(&package_manager) {
-        Ok(manager) => manager,
-        Err(_) => {
-            println!("Invalid package_manager argument:
-            {}", package_manager);
-            return 1;
-        }
-    };
-
-    let toml_str = match fs::read_to_string(&file_path) {
-        Ok(file) => file,
-        Err(_) => {
-            println!("Unable to read file: {}", file_path);
-            return 1;
-        }
-    };
-
-    let modified_toml = match toml_set_package_attribute_string(
-        toml_str,
-        package_manager,
-        &package_name,
-        &attribute_name,
-        &value_string,
-    ) {
-        Ok(toml) => toml,
-        Err(e) => {
-            println!("Error modifying toml file: {}", e);
-            return 1;
-        }
-    };
-
-    if let Err(_) = fs::write(&file_path, modified_toml) {
-        println!("Unable to write file: {}", file_path);
-        return 1;
-    }
-
-    return 0;
-}
-
-#[allow(dead_code)]
-#[no_mangle]
-pub extern "C" fn get_package_attribute_string (
-    file_path: *const c_char,
-    package_manager: *const c_char,
-    package_name: *const c_char,
-    attribute_name: *const c_char,
-) -> *mut c_char  {
-    let file_path = unsafe { CStr::from_ptr(file_path).to_string_lossy().into_owned() };
-    let package_manager = unsafe { CStr::from_ptr(package_manager).to_string_lossy().into_owned() };
-    let package_name = unsafe { CStr::from_ptr(package_name).to_string_lossy().into_owned() };
-    let attribute_name = unsafe { CStr::from_ptr(attribute_name).to_string_lossy().into_owned() };
-
-    let package_manager = match parse_package_manager(&package_manager) {
-        Ok(manager) => manager,
-        Err(_) => {
-            println!("Invalid package_manager argument:
-            {}", package_manager);
-            return CString::new("").unwrap().into_raw();
-        }
-    };
-
-    let toml_str = match fs::read_to_string(&file_path) {
-        Ok(file) => file,
-        Err(_) => {
-            println!("Unable to read file: {}", file_path);
-            return CString::new("").unwrap().into_raw();
-        }
-    };
-
-    let package_attribute_value = match toml_get_package_attribute_string(
-        toml_str,
-        package_manager,
-        &package_name,
-        &attribute_name,
-    ) {
-        Ok(value) => value,
-        Err(e) => {
-            println!("Error reading toml attribute: {}", e);
-            return CString::new("").unwrap().into_raw();
-        }
-    };
-
-    let raw_string = match CString::new(package_attribute_value).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        },
-        ptr => ptr,
-    };
-
-    return raw_string;
-
-}
-
-
-#[allow(dead_code)]
-#[no_mangle]
-pub extern "C" fn remove_package_attribute (
-    file_path: *const c_char,
-    package_manager: *const c_char,
-    package_name: *const c_char,
-    attribute_name: *const c_char,
-) -> i32  {
-    let file_path = unsafe { CStr::from_ptr(file_path).to_string_lossy().into_owned() };
-    let package_manager = unsafe { CStr::from_ptr(package_manager).to_string_lossy().into_owned() };
-    let package_name = unsafe { CStr::from_ptr(package_name).to_string_lossy().into_owned() };
-    let attribute_name = unsafe { CStr::from_ptr(attribute_name).to_string_lossy().into_owned() };
-
-    let package_manager = match parse_package_manager(&package_manager) {
-        Ok(manager) => manager,
-        Err(_) => {
-            println!("Invalid package_manager argument:
-            {}", package_manager);
-            return 1
-        }
-    };
-
-    let toml_str = match fs::read_to_string(&file_path) {
-        Ok(file) => file,
-        Err(_) => {
-            println!("Unable to read file: {}", file_path);
-            return 1
-        }
-    };
-
-    let modified_toml = match toml_remove_package_attribute(
-        toml_str,
-        package_manager,
-        &package_name,
-        &attribute_name,
-    ) {
-        Ok(value) => value,
-        Err(e) => {
-            println!("Error removing toml attribute: {}", e);
-            return 1;
-        }
-    };
-
-    if let Err(_) = fs::write(&file_path, modified_toml) {
-        println!("Unable to write file: {}", file_path);
-        return 1;
-    }
-
-    return 0;
-
-}
-
-
-#[allow(dead_code)]
-#[no_mangle]
-pub extern "C" fn remove_package (
-    file_path: *const c_char,
-    package_manager: *const c_char,
-    package_name: *const c_char,
-) -> i32  {
-    let file_path = unsafe { CStr::from_ptr(file_path).to_string_lossy().into_owned() };
-    let package_manager = unsafe { CStr::from_ptr(package_manager).to_string_lossy().into_owned() };
-    let package_name = unsafe { CStr::from_ptr(package_name).to_string_lossy().into_owned() };
-
-    let package_manager = match parse_package_manager(&package_manager) {
-        Ok(manager) => manager,
-        Err(_) => {
-            println!("Invalid package_manager argument:
-            {}", package_manager);
-            return 1
-        }
-    };
-
-    let toml_str = match fs::read_to_string(&file_path) {
-        Ok(file) => file,
-        Err(_) => {
-            println!("Unable to read file: {}", file_path);
-            return 1
-        }
-    };
-
-    let modified_toml = match toml_remove_package(
-        toml_str,
-        package_manager,
-        &package_name,
-    ) {
-        Ok(value) => value,
-        Err(e) => {
-            println!("Error removing package: {}", e);
-            return 1;
-        }
-    };
-
-    if let Err(_) = fs::write(&file_path, modified_toml) {
-        println!("Unable to write file: {}", file_path);
-        return 1;
-    }
-
-    return 0;
-
-}
-
-
-// Package Stuff Above Here //
-
-// TOML Edit API Below Here //
-
-
-// dll exported function to return a pointer to a toml_edit::Doc, which can be used in other .dll functions
+// dll exported function to return a pointer to a Document, which can be used in other .dll functions
 // takes a TOML string as an input
 #[allow(dead_code)]
 #[no_mangle]
@@ -443,7 +27,7 @@ pub extern "C" fn toml_edit_doc_from_string (
 ) -> *mut c_void {
     let toml_str = unsafe { CStr::from_ptr(toml_str).to_string_lossy().into_owned() };
 
-    let doc = match toml_edit::Document::from_str(&toml_str) {
+    let doc = match Document::from_str(&toml_str) {
         Ok(doc) => doc,
         Err(_) => {
             println!("Unable to parse TOML string: {}", toml_str);
@@ -456,15 +40,15 @@ pub extern "C" fn toml_edit_doc_from_string (
     Box::into_raw(doc) as *mut c_void
 }
 
-// dll exported function to return a toml string from a toml_edit::Doc
+// dll exported function to return a toml string from a Document
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_to_string (
     doc: *mut c_void,
 ) -> *mut c_char {
-    let doc = unsafe { &mut *(doc as *mut toml_edit::Document) };
+    let doc = unsafe { &mut *(doc as *mut Document) };
 
-    let toml_str = match toml_edit::Document::to_string(doc) {
+    let toml_str = match Document::to_string(doc) {
         toml_str => toml_str,
     };
 
@@ -481,23 +65,13 @@ pub extern "C" fn toml_edit_doc_to_string (
 
 
 
-// dll exported function to return a pointer to the root Table of a toml_edit::Doc
+// dll exported function to return a pointer to the root Table of a Document
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_get_root_table (
     doc: *mut c_void,
 ) -> *mut c_void {
-    let doc = unsafe { &mut *(doc as *mut toml_edit::Document) };
-
-    // let root_table = match doc.as_table_mut() {
-    //     Some(table) => table,
-    //     None => {
-    //         println!("Unable to get root table");
-    //         return ptr::null_mut();
-    //     }
-    // };
-    //
-    // root_table as *mut toml_edit::Table as *mut c_void
+    let doc = unsafe { &mut *(doc as *mut Document) };
 
     let table = match doc.as_table() {
         table => table
@@ -509,15 +83,15 @@ pub extern "C" fn toml_edit_doc_get_root_table (
 
 }
 
-// dll exported function to convert from a toml_edit::Table to a toml string
+// dll exported function to convert from a Table to a toml string
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_to_string (
     table: *mut c_void,
 ) -> *mut c_char {
-    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let table = unsafe { &mut *(table as *mut Table) };
 
-    let toml_str = match toml_edit::Table::to_string(table) {
+    let toml_str = match Table::to_string(table) {
         toml_str => toml_str,
     };
 
@@ -532,15 +106,15 @@ pub extern "C" fn toml_edit_table_to_string (
     return raw_string;
 }
 
-// dll exported function to convert a toml_edit::Table to an toml_edit::Item
+// dll exported function to convert a Table to an Item
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_to_item (
     table: *mut c_void,
 ) -> *mut c_void {
-    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let table = unsafe { &mut *(table as *mut Table) };
 
-    let item = match toml_edit::Item::Table(table.clone()) {
+    let item = match Item::Table(table.clone()) {
         item => item,
     };
 
@@ -549,13 +123,13 @@ pub extern "C" fn toml_edit_table_to_item (
     Box::into_raw(item) as *mut c_void
 }
 
-// dll exported function to convert a toml_edit::InlineTable to an toml_edit::Item
+// dll exported function to convert a InlineTable to an Item
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_to_item (
     inline_table: *mut c_void,
 ) -> *mut c_void {
-    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
+    let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let item = match  toml_edit::value(inline_table.clone()) {
         item => item,
@@ -567,13 +141,13 @@ pub extern "C" fn toml_edit_inline_table_to_item (
 }
 
 
-// dll exported function to list the tables in a toml_edit::Doc as a multi-line string
+// dll exported function to list the tables in a Document as a multi-line string
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_list_tables (
     doc: *mut c_void,
 ) -> *mut c_char {
-    let doc = unsafe { &mut *(doc as *mut toml_edit::Document) };
+    let doc = unsafe { &mut *(doc as *mut Document) };
 
     let mut table_list = String::new();
 
@@ -593,15 +167,15 @@ pub extern "C" fn toml_edit_doc_list_tables (
 }
 
 
-// dll exported function to return a pointer to a toml_edit::Table, which can be used in other .dll functions
-// takes a toml_edit::Doc and a table name as inputs
+// dll exported function to return a pointer to a Table, which can be used in other .dll functions
+// takes a Document and a table name as inputs
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_get_table (
     doc: *mut c_void,
     table_name: *const c_char,
 ) -> *mut c_void {
-    let doc = unsafe { &mut *(doc as *mut toml_edit::Document) };
+    let doc = unsafe { &mut *(doc as *mut Document) };
     let table_name = unsafe { CStr::from_ptr(table_name).to_string_lossy().into_owned() };
 
     let table = match doc[table_name.as_str()].as_table() {
@@ -617,8 +191,8 @@ pub extern "C" fn toml_edit_doc_get_table (
     Box::into_raw(table) as *mut c_void
 }
 
-// dll exported function to set an item in the root table of a toml_edit::Doc
-// takes a toml_edit::Doc, a key, and a toml_edit::Item as inputs
+// dll exported function to set an item in the root table of a Document
+// takes a Document, a key, and a Item as inputs
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_set_item (
@@ -626,13 +200,13 @@ pub extern "C" fn toml_edit_doc_set_item (
     key: *const c_char,
     item: *mut c_void,
 ) -> *mut c_void {
-    let doc = unsafe { &mut *(doc as *mut toml_edit::Document) };
+    let doc = unsafe { &mut *(doc as *mut Document) };
     let key = unsafe { CStr::from_ptr(key).to_string_lossy().into_owned() };
-    let item = unsafe { &mut *(item as *mut toml_edit::Item) };
+    let item = unsafe { &mut *(item as *mut Item) };
 
     doc[key.as_str()] = item.clone();
 
-    doc as *mut toml_edit::Document as *mut c_void
+    doc as *mut Document as *mut c_void
 
 }
 
@@ -642,7 +216,7 @@ pub extern "C" fn toml_edit_doc_set_item (
 pub extern "C" fn toml_edit_table_list_items (
     table: *mut c_void,
 ) -> *mut c_char {
-    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let table = unsafe { &mut *(table as *mut Table) };
 
     let mut item_list = String::new();
 
@@ -661,15 +235,15 @@ pub extern "C" fn toml_edit_table_list_items (
     return raw_string;
 }
 
-// dll exported function to remove an item from a toml_edit::Table
-// takes a toml_edit::Table and a item name as inputs
+// dll exported function to remove an item from a Table
+// takes a Table and a item name as inputs
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_remove_item (
     table: *mut c_void,
     key: *const c_char,
 ) -> u64 {
-    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let table = unsafe { &mut *(table as *mut Table) };
     let key = unsafe { CStr::from_ptr(key).to_string_lossy().into_owned() };
 
     return if table.contains_key(key.as_str()) {
@@ -680,15 +254,15 @@ pub extern "C" fn toml_edit_table_remove_item (
     }
 }
 
-// dll exported function to remove an item from a toml_edit::InlineTable
-// takes a toml_edit::InlineTable and a item name as inputs
+// dll exported function to remove an item from a InlineTable
+// takes a InlineTable and a item name as inputs
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_remove_item (
     inline_table: *mut c_void,
     item_name: *const c_char,
 ) -> u64 {
-    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
+    let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
     let item_name = unsafe { CStr::from_ptr(item_name).to_string_lossy().into_owned() };
 
     return if inline_table.contains_key(item_name.as_str()) {
@@ -700,15 +274,15 @@ pub extern "C" fn toml_edit_inline_table_remove_item (
 }
 
 
-// dll exported function to return a pointer to a toml_edit::Item, which can be used in other .dll functions
-// takes a toml_edit::Table and a item name as inputs
+// dll exported function to return a pointer to a Item, which can be used in other .dll functions
+// takes a Table and a item name as inputs
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_get_item (
     table: *mut c_void,
     item_name: *const c_char,
 ) -> *mut c_void {
-    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let table = unsafe { &mut *(table as *mut Table) };
     let item_name = unsafe { CStr::from_ptr(item_name).to_string_lossy().into_owned() };
 
     let item = match table[item_name.as_str()].clone() {
@@ -724,20 +298,20 @@ pub extern "C" fn toml_edit_table_get_item (
     Box::into_raw(item) as *mut c_void
 }
 
-// dll exported function to get the type of a toml_edit::Item
-// takes a toml_edit::Item as input
+// dll exported function to get the type of a Item
+// takes a Item as input
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_get_item_type (
     item: *mut c_void,
 ) -> *mut c_char {
-    let item = unsafe { &mut *(item as *mut toml_edit::Item) };
+    let item = unsafe { &mut *(item as *mut Item) };
 
     let item_type = match item {
-        toml_edit::Item::None => "None",
-        toml_edit::Item::Value(_) => "Value",
-        toml_edit::Item::ArrayOfTables(_) => "ArrayOfTables",
-        toml_edit::Item::Table(_) => "Table",
+        Item::None => "None",
+        Item::Value(_) => "Value",
+        Item::ArrayOfTables(_) => "ArrayOfTables",
+        Item::Table(_) => "Table",
     };
 
     let raw_string = match CString::new(item_type).unwrap().into_raw() {
@@ -752,23 +326,23 @@ pub extern "C" fn toml_edit_get_item_type (
 }
 
 
-// dll exported function to get the type of a toml_edit::Value
-// takes a toml_edit::Value as input
+// dll exported function to get the type of a value
+// takes a value as input
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_get_value_type (
     value: *mut c_void,
 ) -> *mut c_char {
-    let value = unsafe { &mut *(value as *mut toml_edit::Value) };
+    let value = unsafe { &mut *(value as *mut Value) };
 
     let value_type = match value {
-        toml_edit::Value::String(_) => "String",
-        toml_edit::Value::Integer(_) => "Integer",
-        toml_edit::Value::Float(_) => "Float",
-        toml_edit::Value::Boolean(_) => "Boolean",
-        toml_edit::Value::Datetime(_) => "Datetime",
-        toml_edit::Value::Array(_) => "Array",
-        toml_edit::Value::InlineTable(_) => "InlineTable",
+        Value::String(_) => "String",
+        Value::Integer(_) => "Integer",
+        Value::Float(_) => "Float",
+        Value::Boolean(_) => "Boolean",
+        Value::Datetime(_) => "Datetime",
+        Value::Array(_) => "Array",
+        Value::InlineTable(_) => "InlineTable",
     };
 
     let raw_string = match CString::new(value_type).unwrap().into_raw() {
@@ -782,17 +356,17 @@ pub extern "C" fn toml_edit_get_value_type (
     return raw_string;
 }
 
-// dll exported function to get a toml_edit::Value from a toml_edit::Item
-// takes a toml_edit::Item as input
+// dll exported function to get a value from a Item
+// takes a Item as input
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_item_into_value (
     item: *mut c_void,
 ) -> *mut c_void {
-    let item = unsafe { &mut *(item as *mut toml_edit::Item) };
+    let item = unsafe { &mut *(item as *mut Item) };
 
     let value = match item {
-        toml_edit::Item::Value(value) => value,
+        Item::Value(value) => value,
         _ => {
             println!("Item is not a Value");
             return ptr::null_mut();
@@ -805,17 +379,17 @@ pub extern "C" fn toml_edit_item_into_value (
 }
 
 
-// dll exported function to get a toml_edit::Table from a toml_edit::Item
-// takes a toml_edit::Item as input
+// dll exported function to get a Table from a Item
+// takes a Item as input
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_item_into_table (
     item: *mut c_void,
 ) -> *mut c_void {
-    let item = unsafe { &mut *(item as *mut toml_edit::Item) };
+    let item = unsafe { &mut *(item as *mut Item) };
 
     let table = match item {
-        toml_edit::Item::Table(table) => table,
+        Item::Table(table) => table,
         _ => {
             println!("Item is not a Table");
             return ptr::null_mut();
@@ -828,17 +402,17 @@ pub extern "C" fn toml_edit_item_into_table (
 }
 
 
-// dll exported function to get a String typed Value from a toml_edit::Value
-// takes a toml_edit::Value as input
+// dll exported function to get a String typed Value from a value
+// takes a value as input
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_get_value_string (
     value: *mut c_void,
 ) -> *mut c_char {
-    let value = unsafe { &mut *(value as *mut toml_edit::Value) };
+    let value = unsafe { &mut *(value as *mut Value) };
 
     let value = match value {
-        toml_edit::Value::String(value) => value,
+        Value::String(value) => value,
         _ => {
             println!("Value is not a String");
             return CString::new("").unwrap().into_raw();
@@ -858,17 +432,17 @@ pub extern "C" fn toml_edit_get_value_string (
     return raw_string;
 }
 
-// dll exported function to get a i64 typed Value from a toml_edit::Value
-// takes a toml_edit::Value as input
+// dll exported function to get a i64 typed Value from a value
+// takes a value as input
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_get_value_i64 (
     value: *mut c_void,
 ) -> i64 {
-    let value = unsafe { &mut *(value as *mut toml_edit::Value) };
+    let value = unsafe { &mut *(value as *mut Value) };
 
     let value = match value {
-        toml_edit::Value::Integer(value) => value,
+        Value::Integer(value) => value,
         _ => {
             println!("Value is not a Integer");
             return 0;
@@ -880,17 +454,17 @@ pub extern "C" fn toml_edit_get_value_i64 (
     return return_value;
 }
 
-// dll exported function to get an InlineTable typed Value from a toml_edit::Value
-// takes a toml_edit::Value as input and returns a raw pointer to a toml_edit::Table
+// dll exported function to get an InlineTable typed Value from a value
+// takes a value as input and returns a raw pointer to a Table
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_get_value_inline_table (
     value: *mut c_void,
 ) -> *mut c_void {
-    let value = unsafe { &mut *(value as *mut toml_edit::Value) };
+    let value = unsafe { &mut *(value as *mut Value) };
 
     let value = match value {
-        toml_edit::Value::InlineTable(value) => value,
+        Value::InlineTable(value) => value,
         _ => {
             println!("Value is not a InlineTable");
             return ptr::null_mut();
@@ -938,19 +512,19 @@ pub extern "C" fn toml_edit_new_value_i64 (
 #[no_mangle]
 pub extern "C" fn toml_edit_new_value_inline_table (
 ) -> *mut c_void {
-    let item = toml_edit::value(toml_edit::InlineTable::default());
+    let item = toml_edit::value(InlineTable::default());
 
     let item = Box::new(item);
 
     Box::into_raw(item) as *mut c_void
 }
 
-// dll exported function to create a new, empty toml_edit::Table
+// dll exported function to create a new, empty Table
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_new_table (
 ) -> *mut c_void {
-    let table = toml_edit::Table::default();
+    let table = Table::default();
 
     let table = Box::new(table);
 
@@ -966,7 +540,7 @@ pub extern "C" fn toml_edit_table_contains_item (
     table: *mut c_void,
     key: *const c_char,
 ) -> i64 {
-    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let table = unsafe { &mut *(table as *mut Table) };
     let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
 
     return if table.contains_key(key) { 1 } else { 0 };
@@ -981,14 +555,14 @@ pub extern "C" fn toml_edit_inline_table_contains_item (
     table: *mut c_void,
     key: *const c_char,
 ) -> i64 {
-    let table = unsafe { &mut *(table as *mut toml_edit::InlineTable) };
+    let table = unsafe { &mut *(table as *mut InlineTable) };
     let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
 
     return if table.contains_key(key) { 1 } else { 0 };
 
 }
 
-// dll exported function to set a toml_edit::Item in a toml_edit::Table
+// dll exported function to set a Item in a Table
 // takes a *const c_char as input
 #[allow(dead_code)]
 #[no_mangle]
@@ -997,21 +571,21 @@ pub extern "C" fn toml_edit_table_set_item (
     key: *const c_char,
     item: *mut c_void,
 ) {
-    let table = unsafe { &mut *(table as *mut toml_edit::Table) };
+    let table = unsafe { &mut *(table as *mut Table) };
     let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
-    let item = unsafe { &mut *(item as *mut toml_edit::Item) };
+    let item = unsafe { &mut *(item as *mut Item) };
 
     table.insert(key, item.clone());
 }
 
 // dll exported to return a multi-line string of the keynames in an InlineTable
-// takes a toml_edit::InlineTable as input
+// takes a InlineTable as input
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_list_items (
     inline_table: *mut c_void,
 ) -> *mut c_char {
-    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
+    let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let mut return_string = String::new();
 
@@ -1031,15 +605,15 @@ pub extern "C" fn toml_edit_inline_table_list_items (
     return raw_string;
 }
 
-// dll exported function to get an toml_edit::Value from a toml_edit::InlineTable
-// takes a toml_edit::InlineTable as input and a *const c_char as the keyname
+// dll exported function to get an value from a InlineTable
+// takes a InlineTable as input and a *const c_char as the keyname
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_get_item (
     inline_table: *mut c_void,
     key: *const c_char,
 ) -> *mut c_void {
-    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
+    let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let key = match unsafe { CStr::from_ptr(key).to_str() } {
         Ok(key) => key,
@@ -1063,8 +637,8 @@ pub extern "C" fn toml_edit_inline_table_get_item (
 
 }
 
-// dll exported function to set an toml_edit::Value to a toml_edit::InlineTable
-// takes a toml_edit::InlineTable as input and a *const c_char as the keyname
+// dll exported function to set an value to a InlineTable
+// takes a InlineTable as input and a *const c_char as the keyname
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_set_item (
@@ -1072,7 +646,7 @@ pub extern "C" fn toml_edit_inline_table_set_item (
     key: *const c_char,
     item: *mut c_void,
 ) {
-    let inline_table = unsafe { &mut *(inline_table as *mut toml_edit::InlineTable) };
+    let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let key = match unsafe { CStr::from_ptr(key).to_str() } {
         Ok(key) => key,
@@ -1082,13 +656,13 @@ pub extern "C" fn toml_edit_inline_table_set_item (
         }
     };
 
-    let item = unsafe { &mut *(item as *mut toml_edit::Item) };
+    let item = unsafe { &mut *(item as *mut Item) };
 
-    // verify that the item is a toml_edit::Item::Value
+    // verify that the item is a Item::Value
     match item {
-        toml_edit::Item::Value(_) => {},
+        Item::Value(_) => {},
         _ => {
-            println!("Item is not a toml_edit::Item::Value");
+            println!("Item is not a Item::Value");
             return;
         }
     }
@@ -1097,7 +671,7 @@ pub extern "C" fn toml_edit_inline_table_set_item (
     let value = match item.as_value() {
         Some(value) => value,
         None => {
-            println!("Unable to convert item to toml_edit::Value");
+            println!("Unable to convert item to Value");
             return;
         }
     };
@@ -1108,53 +682,53 @@ pub extern "C" fn toml_edit_inline_table_set_item (
 }
 
 
-// dll exported function to close the toml_edit::Doc and free the memory
+// dll exported function to close the Document and free the memory
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_close (
     doc: *mut c_void,
 ) {
-    let doc = unsafe { Box::from_raw(doc as *mut toml_edit::Document) };
+    let doc = unsafe { Box::from_raw(doc as *mut Document) };
     drop(doc);
 }
 
-// dll exported function to close the toml_edit::Table and free the memory
+// dll exported function to close the Table and free the memory
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_close_table (
     table: *mut c_void,
 ) {
-    let table = unsafe { Box::from_raw(table as *mut toml_edit::Table) };
+    let table = unsafe { Box::from_raw(table as *mut Table) };
     drop(table);
 }
 
-// dll exported function to close the toml_edit::Item and free the memory
+// dll exported function to close the Item and free the memory
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_close_item (
     item: *mut c_void,
 ) {
-    let item = unsafe { Box::from_raw(item as *mut toml_edit::Item) };
+    let item = unsafe { Box::from_raw(item as *mut Item) };
     drop(item);
 }
 
-// dll exported function to close the toml_edit::Value and free the memory
+// dll exported function to close the Value and free the memory
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_close_value (
     value: *mut c_void,
 ) {
-    let value = unsafe { Box::from_raw(value as *mut toml_edit::Value) };
+    let value = unsafe { Box::from_raw(value as *mut Value) };
     drop(value);
 }
 
-// dll exported function to close the toml_edit::InlineTable and free the memory
+// dll exported function to close the InlineTable and free the memory
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_close_inline_table (
     table: *mut c_void,
 ) {
-    let table = unsafe { Box::from_raw(table as *mut toml_edit::InlineTable) };
+    let table = unsafe { Box::from_raw(table as *mut InlineTable) };
     drop(table);
 }
 
@@ -1171,49 +745,8 @@ pub extern "C" fn memory_free_string(s: *mut c_char) {
 }
 
 
-// a DLL function that returns a list of packages (as a multi-line string)
-#[allow(dead_code)]
-#[no_mangle]
-pub extern "C" fn list_packages (
-    file_path: *const c_char,
-    package_manager: *const c_char,
-) -> *mut c_char {
-    let file_path = unsafe { CStr::from_ptr(file_path).to_string_lossy().into_owned() };
-    let package_manager = unsafe { CStr::from_ptr(package_manager).to_string_lossy().into_owned() };
-
-    let package_manager = match parse_package_manager(&package_manager) {
-        Ok(manager) => manager,
-        Err(_) => {
-            println!("Invalid package_manager argument:
-            {}", package_manager);
-            return CString::new("").unwrap().into_raw();
-        }
-    };
-
-    let toml_str = match fs::read_to_string(&file_path) {
-        Ok(file) => file,
-        Err(_) => {
-            println!("Unable to read file: {}", file_path);
-            return CString::new("").unwrap().into_raw();
-        }
-    };
-
-    let package_list = match toml_list_packages(
-        toml_str,
-        package_manager,
-    ) {
-        Ok(list) => list,
-        Err(e) => {
-            println!("Error modifying toml file: {}", e);
-            return CString::new("").unwrap().into_raw();
-        }
-    };
-
-    return CString::new(package_list).unwrap().into_raw();
-}
-
-
 #[cfg(test)]
+#[allow(unused_imports, dead_code)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
@@ -1239,230 +772,4 @@ mod tests {
         let s2 = remove_indentation(s2);
         assert_eq!(s1, s2);
     }
-
-    #[test]
-    fn test_modify_toml() {
-        let toml_str = "";
-        let modified_toml = toml_set_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::VIPM,
-            "vipm_package",
-            "version",
-            "1.2.3",
-        );
-        assert_equal_ignore_indentation(
-            modified_toml.unwrap().as_str(),
-            r#"
-            [vipm]
-
-            [vipm.dependencies]
-            vipm_package = "1.2.3"
-            "#
-        );
-    }
-
-
-
-    #[test]
-    fn test_replace_version_subkey() {
-        let toml_str = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = { version = "0.0.0", url = "https://package.net/my_package/0.0.0" }
-            "#;
-
-        let modified_toml = toml_set_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::NIPM,
-            "my_package",
-            "version",
-            "1.2.3",
-        );
-
-        let expected_toml = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = { version = "1.2.3", url = "https://package.net/my_package/0.0.0" }
-            "#;
-
-        assert_equal_ignore_indentation(modified_toml.unwrap().as_str(), expected_toml);
-    }
-
-    #[test]
-    fn test_replace_version_string() {
-        let toml_str = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = "1.0.0"
-            "#;
-
-        let modified_toml = toml_set_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::NIPM,
-            "my_package",
-            "version",
-            "1.2.3",
-        );
-
-        let expected_toml = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = "1.2.3"
-            "#;
-
-        assert_equal_ignore_indentation(modified_toml.unwrap().as_str(), expected_toml);
-    }
-
-
-    #[test]
-    fn test_add_to_inline_table() {
-        let toml_str = r#"
-            [vipm]
-
-            [vipm.dependencies]
-            my_package = "1.0.0"
-            "#;
-
-        let modified_toml = toml_set_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::VIPM,
-            "my_package",
-            "url",
-            "https://jki.net",
-        );
-        assert_equal_ignore_indentation(
-            modified_toml.unwrap().as_str(),
-            r#"
-            [vipm]
-
-            [vipm.dependencies]
-            my_package = { version = "1.0.0", url = "https://jki.net" }
-            "#
-        );
-    }
-
-    #[test]
-    fn test_toml_set_package_version() {
-        let toml_str = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = { version = "1.0.0", url = "https://jki.net" }
-            "#;
-
-        let modified_toml = toml_set_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::NIPM,
-            "my_package",
-            "version",
-            "1.2.3",
-        );
-        assert_equal_ignore_indentation(
-            modified_toml.unwrap().as_str(),
-            r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = { version = "1.2.3", url = "https://jki.net" }
-            "#
-        );
-    }
-
-    #[test]
-    fn test_preserve_comment() {
-        let toml_str = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            # this is a comment
-            my_package = "1.0.0"
-            "#;
-
-        let modified_toml = toml_set_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::NIPM,
-            "my_package",
-            "version",
-            "1.2.3",
-        );
-        assert_equal_ignore_indentation(
-            modified_toml.unwrap().as_str(),
-            r#"
-            [nipm]
-
-            [nipm.dependencies]
-            # this is a comment
-            my_package = "1.2.3"
-            "#
-        );
-    }
-
-    #[test]
-    fn test_create_tables_if_needed() {
-        let toml_str = r#"
-            "#;
-
-        let modified_toml = toml_set_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::NIPM,
-            "my_package",
-            "version",
-            "1.2.3",
-        );
-        assert_equal_ignore_indentation(
-            modified_toml.unwrap().as_str(),
-            r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = "1.2.3"
-            "#
-        );
-    }
-
-    #[test]
-    fn test_toml_get_package_version() {
-        let toml_str = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = { version = "1.0.0", url = "https://jki.net" }
-            "#;
-
-        let version_string = toml_get_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::NIPM,
-            "my_package",
-            "version",
-        );
-        assert_equal_ignore_indentation(
-            version_string.unwrap().as_str(),
-            r#"1.0.0"#
-        );
-    }
-
-    #[test]
-    fn test_toml_get_package_missing_attribute() {
-        let toml_str = r#"
-            [nipm]
-
-            [nipm.dependencies]
-            my_package = { version = "1.0.0", url = "https://jki.net" }
-            "#;
-
-        let version_string = toml_get_package_attribute_string(
-            toml_str.to_string(),
-            PackageManager::NIPM,
-            "my_package",
-            "display_version",
-        );
-
-        // check if version_string contains an error message
-        assert!(version_string.is_err());
-    }
-
 }
