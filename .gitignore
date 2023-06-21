@@ -11,3 +11,4 @@ target/
 # LabVIEW local files
 *.lvlps
 *.aliases
+*.framework/
