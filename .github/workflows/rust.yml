@@ -28,7 +28,7 @@ jobs:
           - target: i686-pc-windows-msvc
             runs-on: windows-latest
             shared-lib-extension: dll
-          - target: x86_64h-apple-darwin
+          - target: x86_64-apple-darwin
             runs-on: macos-latest
             shared-lib-extension: dylib
 
