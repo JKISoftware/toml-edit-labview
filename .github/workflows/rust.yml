@@ -49,7 +49,7 @@ jobs:
       if: ${{ matrix.target == 'x86_64-apple-darwin' }}
       run: |
         BUILD_TYPE=${{ env.BUILD_TYPE }}
-        SHARED_LIBARY_NAME=dragon_toml_64.dylib
+        SHARED_LIBARY_NAME=${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
         BUILD_OUTPUT_DIR=target/${{ matrix.target }}/${{ env.BUILD_TYPE }}
         FRAMEWORK_NAME=dragon_toml_64
         pushd $BUILD_OUTPUT_DIR
