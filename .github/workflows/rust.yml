@@ -9,6 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   BUILD_TYPE: release
+  SHARED_LIBRARY_NAME: dragon_toml
 
 jobs:
   build:
@@ -22,16 +23,19 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             runs-on: ubuntu-latest
             shared-lib-extension: so
+            bitness: 64
           - target: x86_64-pc-windows-msvc
             runs-on: windows-latest
             shared-lib-extension: dll
+            bitness: 64
           - target: i686-pc-windows-msvc
             runs-on: windows-latest
             shared-lib-extension: dll
+            bitness: 64
           - target: x86_64-apple-darwin
             runs-on: macos-latest
-            # shared-lib-extension: dylib
             shared-lib-extension: framework.zip
+            bitness: 64
 
     steps:
     - uses: actions/checkout@v3
@@ -39,6 +43,8 @@ jobs:
       run: |
         rustup target add ${{ matrix.target }}
         cargo build --target=${{ matrix.target }} --verbose --${{ env.BUILD_TYPE }}
+        pushd target/${{ matrix.target }}/${{ env.BUILD_TYPE }}
+        mv *.${{ matrix.shared-lib-extension }} ${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
     - name: Bundle Framework
       if: ${{ matrix.target == 'x86_64-apple-darwin' }}
       run: |
