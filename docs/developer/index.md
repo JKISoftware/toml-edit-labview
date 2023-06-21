@@ -10,7 +10,7 @@ LabVIEW calls the [toml_edit](https://docs.rs/toml_edit/latest/toml_edit/) Rust 
 The source for this shared library is in the [src/lib.rs](https://github.com/JKISoftware/toml-edit-labview/blob/main/src/lib.rs) file.
 
 #### TOML object references
-The shared library exposes an API for creating and closing references to the core objects/types in the `toml_edit` library (e.g. toml_edit::Document, toml_edit::Table, toml_edit::Item, toml_edit::Value, toml_edit::InlineTable, toml_edit::Array, etc.)
+The shared library exposes an API for creating and closing references to the core objects/types in the `toml_edit` library (e.g. [toml_edit::Document](https://docs.rs/toml_edit/latest/toml_edit/struct.Document.html), [toml_edit::Table](https://docs.rs/toml_edit/latest/toml_edit/struct.Table.html), [toml_edit::Item](https://docs.rs/toml_edit/latest/toml_edit/enum.Item.html), [toml_edit::Value](https://docs.rs/toml_edit/latest/toml_edit/enum.Item.html#variant.Value), [toml_edit::InlineTable](https://docs.rs/toml_edit/latest/toml_edit/struct.InlineTable.html), [toml_edit::Array](https://docs.rs/toml_edit/latest/toml_edit/struct.Array.html), etc.)
 
 #### 32-bit and 64-bit Support
 Support for 32-bit and 64-bit builds of the shared library is achieved by configuring the LabVIEW call library function nodes to pass references as Unsigned Pointer-sized Integer (USZ) values (see #1)
