@@ -1,8 +1,12 @@
 #!/bin/bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+LV_SOURCE_DIR=$SCRIPT_DIR/lv_src
+
 BUILD_TYPE=release
 SHARED_LIBARY_NAME=libtoml.dylib
-BUILD_OUTPUT_DIR=target/$BUILD_TYPE
+BUILD_OUTPUT_DIR=$SCRIPT_DIR/target/$BUILD_TYPE
 
 # # build shared library with Cargo
 # cargo build --$BUILD_TYPE
@@ -33,5 +37,5 @@ zip -r $FRAMEWORK_NAME.framework.zip $FRAMEWORK_NAME.framework
 popd
 
 # Copy into LabVIEW Source Folder
-rm -rf lv_src/$FRAMEWORK_NAME.framework
-cp -R $BUILD_OUTPUT_DIR/$FRAMEWORK_NAME.framework lv_src/
+rm -rf $LV_SOURCE_DIR/$FRAMEWORK_NAME.framework
+cp -R $BUILD_OUTPUT_DIR/$FRAMEWORK_NAME.framework $LV_SOURCE_DIR/
