@@ -3,3 +3,4 @@ labview-version = "2020"
 
 [vipm.dependencies]
 oglib_string = "5.0.0.25"
+jki_lib_caraya = "1.3.0.137"
