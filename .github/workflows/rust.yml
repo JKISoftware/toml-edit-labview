@@ -44,7 +44,7 @@ jobs:
         rustup target add ${{ matrix.target }}
         cargo build --target=${{ matrix.target }} --verbose --${{ env.BUILD_TYPE }}
         pushd target/${{ matrix.target }}/${{ env.BUILD_TYPE }}
-        mv *.dylib ${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
+        mv *.${{ matrix.shared-lib-extension }} ${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
     - name: Bundle MacOS Framework
       if: ${{ matrix.target == 'x86_64-apple-darwin' }}
       run: |
