@@ -41,7 +41,7 @@ jobs:
     - name: Bundle Framework
       if: ${{ matrix.target == 'x86_64-apple-darwin' }}
       run: |
-        chmod ug+w *.sh && ./bundle-framework.sh
+        chmod ug+w *.sh && ./bundle_framework.sh
     - name: Run tests
       run: cargo test --verbose
     - name: Upload artifact
