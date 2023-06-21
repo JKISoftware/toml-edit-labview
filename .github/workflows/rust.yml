@@ -62,7 +62,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.target }}
+        name: shared-library
         if-no-files-found: error
         path: |
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.${{ matrix.shared-lib-extension }}
