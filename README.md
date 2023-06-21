@@ -5,6 +5,11 @@ A LabVIEW wrapper around the Rust [toml_edit](https://docs.rs/toml_edit/latest/t
 ![LabVIEW Version](https://img.shields.io/badge/LabVIEW-2020%20SP1-%23E37725.svg?})
 
 ## Current Status --> Alpha / Experimental
+There's a lot that's in flux and/or not currently working:
+- The shared library runs in the user interface thread (i.e. it's not multi-thread safe), but we're looking into it here -> [#2](https://github.com/JKISoftware/toml-edit-labview/issues/2)
+- It might crash LabVIEW -- we're currently tightening up all the code to ensure it won't crash LabVIEW, buy LabVIEW does crash often when we're working on the code and tweaking things.
+- It might have memory leaks -- we haven't tested that much yet.
+- The names of the VIs (and shared library/functions) are in flux and likely to change.
 
 ## Key Features
 Not all of these are available right now, but will be coming over time (see Roadmap, below).
