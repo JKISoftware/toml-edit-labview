@@ -41,12 +41,27 @@ jobs:
     - name: Bundle Framework
       if: ${{ matrix.target == 'x86_64-apple-darwin' }}
       run: |
-        chmod ug+w *.sh && ./bundle_framework.sh
+        BUILD_TYPE=release
+        SHARED_LIBARY_NAME=libtoml.dylib
+        BUILD_OUTPUT_DIR=$SCRIPT_DIR/target/$BUILD_TYPE
+        FRAMEWORK_NAME=dragon_toml_64
+        pushd $BUILD_OUTPUT_DIR
+        rm -rf $FRAMEWORK_NAME.framework
+        mkdir -p $FRAMEWORK_NAME.framework/Versions/A
+        cp $SHARED_LIBARY_NAME $FRAMEWORK_NAME.framework/Versions/A/$FRAMEWORK_NAME
+        chmod ugo+rx $FRAMEWORK_NAME.framework/Versions/A/$FRAMEWORK_NAME
+        ln -s ./A ./$FRAMEWORK_NAME.framework/Versions/Current
+        ln -s ./Versions/A/$FRAMEWORK_NAME ./$FRAMEWORK_NAME.framework
+        rm -rf $FRAMEWORK_NAME.framework.zip
+        zip -r $FRAMEWORK_NAME.framework.zip $FRAMEWORK_NAME.framework
+        popd
+
     - name: Run tests
       run: cargo test --verbose
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.target }}
+        if-no-files-found: error
         path: |
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.${{ matrix.shared-lib-extension }}
