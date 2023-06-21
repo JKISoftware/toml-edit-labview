@@ -5,7 +5,7 @@
 ### Theory of Operation
 
 #### Thin Shared Library
-LabVIEW calls the `toml_edit` Rust crate (library), by way of shared library (.dll, .so, etc.) that is a very thin wrapper around `toml_edit`.
+LabVIEW calls the [toml_edit](https://docs.rs/toml_edit/latest/toml_edit/) Rust crate (library), by way of shared library (.dll, .so, etc.) that is a very thin wrapper around `toml_edit`.
 
 The source for this shared library is in the [src/lib.rs](https://github.com/JKISoftware/toml-edit-labview/blob/main/src/lib.rs) file.
 
