@@ -32,6 +32,13 @@
 		<Item Name="Package Dependencies" Type="IIO Ladder Diagram">
 			<Property Name="NI.SortType" Type="Int">0</Property>
 			<Property Name="ShowPackages" Type="Bool">true</Property>
+			<Item Name="jki_lib_caraya" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="jki_lib_state_machine [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="labview_open_source_lib_epoch_datetime [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_array [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_error [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_file [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_lvdata [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
 			<Item Name="oglib_string" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
 		</Item>
 		<Item Name="Dependencies" Type="Dependencies">

@@ -567,6 +567,19 @@ pub extern "C" fn toml_edit_table_contains_item (
 }
 
 
+// create a new, empty InlineTable
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_inline_table_new(
+) -> *mut c_void {
+    let t = InlineTable::default();
+
+    let t = Box::new(t);
+
+    return Box::into_raw(t) as *mut c_void
+}
+
+
 // remove an item from a InlineTable
 // takes a InlineTable and a item name as inputs
 #[allow(dead_code)]
