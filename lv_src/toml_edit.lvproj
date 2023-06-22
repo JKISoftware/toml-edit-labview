@@ -22,13 +22,16 @@
 			<Item Name="test_rw_string.vi" Type="VI" URL="../tests/test_rw_string.vi"/>
 			<Item Name="test_rw_integer.vi" Type="VI" URL="../tests/test_rw_integer.vi"/>
 			<Item Name="test_inline_table_write_key_string.vi" Type="VI" URL="../tests/test_inline_table_write_key_string.vi"/>
+			<Item Name="test_remove_key_string.vi" Type="VI" URL="../tests/test_remove_key_string.vi"/>
+			<Item Name="test_remove_key_inline_table.vi" Type="VI" URL="../tests/test_remove_key_inline_table.vi"/>
+			<Item Name="test_remove_key_inline_table_subkey.vi" Type="VI" URL="../tests/test_remove_key_inline_table_subkey.vi"/>
 			<Item Name="all_tests.vi" Type="VI" URL="../toml/support/all_tests.vi"/>
 		</Item>
 		<Item Name="toml.lvclass" Type="LVClass" URL="../toml/toml.lvclass"/>
 		<Item Name="toml_edit.lvlib" Type="Library" URL="../toml_edit.lvlib"/>
+		<Item Name="test_set_inline_table_item.vi" Type="VI" URL="../test_set_inline_table_item.vi"/>
 		<Item Name="test_toml_reader.vi" Type="VI" URL="../test_toml_reader.vi"/>
 		<Item Name="test_toml_writer.vi" Type="VI" URL="../test_toml_writer.vi"/>
-		<Item Name="test_set_inline_table_item.vi" Type="VI" URL="../test_set_inline_table_item.vi"/>
 		<Item Name="Package Dependencies" Type="IIO Ladder Diagram">
 			<Property Name="NI.SortType" Type="Int">0</Property>
 			<Property Name="ShowPackages" Type="Bool">true</Property>
