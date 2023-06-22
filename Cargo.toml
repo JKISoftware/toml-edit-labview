@@ -8,5 +8,5 @@ crate-type = ["cdylib"]
 name = "toml"
 
 [dependencies]
-libc="0.2.144"
+libc="0.2.146"
 toml_edit="0.19.10"
