@@ -16,6 +16,29 @@ use toml_edit::{
     Value,
 };
 
+// return any TOML parse error as a string using toml_edit::TomlError
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_doc_get_error (
+    toml_str: *const c_char,
+) -> *mut c_char {
+
+    let toml_str = unsafe { CStr::from_ptr(toml_str).to_string_lossy().into_owned() };
+
+    // try to parse the TOML string
+    return match Document::from_str(&toml_str) {
+        Ok(_) => {
+            // return an empty string if no error
+            CString::new("").unwrap().into_raw()
+        },
+        Err(error) => {
+            // return the error string (if any)
+            CString::new(error.to_string()).unwrap().into_raw()
+        }
+    };
+
+}
+
 // return a pointer to a Document, which can be used in other .dll functions
 // takes a TOML string as an input
 #[allow(dead_code)]
