@@ -25,6 +25,7 @@
 			<Item Name="test_remove_key_string.vi" Type="VI" URL="../tests/test_remove_key_string.vi"/>
 			<Item Name="test_remove_key_inline_table.vi" Type="VI" URL="../tests/test_remove_key_inline_table.vi"/>
 			<Item Name="test_remove_key_inline_table_subkey.vi" Type="VI" URL="../tests/test_remove_key_inline_table_subkey.vi"/>
+			<Item Name="test_table_creation.vi" Type="VI" URL="../tests/test_table_creation.vi"/>
 			<Item Name="all_tests.vi" Type="VI" URL="../toml/support/all_tests.vi"/>
 		</Item>
 		<Item Name="toml_edit.lvlib" Type="Library" URL="../toml_edit.lvlib"/>
@@ -402,7 +403,7 @@
 				<Item Name="Path to URL.vi" Type="VI" URL="/&lt;vilib&gt;/printing/PathToURL.llb/Path to URL.vi"/>
 				<Item Name="Open URL in Default Browser (path).vi" Type="VI" URL="/&lt;vilib&gt;/Platform/browser.llb/Open URL in Default Browser (path).vi"/>
 				<Item Name="Open URL in Default Browser.vi" Type="VI" URL="/&lt;vilib&gt;/Platform/browser.llb/Open URL in Default Browser.vi"/>
-				<Item Name="Parse State Queue__JKI_lib_State_Machine.vi" Type="VI" URL="/&lt;vilib&gt;/addons/_JKI Toolkits/State Machine/_JKI_lib_State_Machine.llb/Parse State Queue__JKI_lib_State_Machine.vi"/>
+				<Item Name="Parse State Queue__jki_lib_state_machine.vi" Type="VI" URL="/&lt;vilib&gt;/addons/_JKI Toolkits/State Machine/_JKI_lib_State_Machine.llb/Parse State Queue__jki_lib_state_machine.vi"/>
 				<Item Name="Add State(s) to Queue__jki_lib_state_machine.vi" Type="VI" URL="/&lt;vilib&gt;/addons/_JKI Toolkits/State Machine/_JKI_lib_State_Machine.llb/Add State(s) to Queue__jki_lib_state_machine.vi"/>
 				<Item Name="imagedata.ctl" Type="VI" URL="/&lt;vilib&gt;/picture/picture.llb/imagedata.ctl"/>
 				<Item Name="NI_PackedLibraryUtility.lvlib" Type="Library" URL="/&lt;vilib&gt;/Utility/LVLibp/NI_PackedLibraryUtility.lvlib"/>
