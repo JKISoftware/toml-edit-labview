@@ -27,7 +27,6 @@
 			<Item Name="test_remove_key_inline_table_subkey.vi" Type="VI" URL="../tests/test_remove_key_inline_table_subkey.vi"/>
 			<Item Name="all_tests.vi" Type="VI" URL="../toml/support/all_tests.vi"/>
 		</Item>
-		<Item Name="toml.lvclass" Type="LVClass" URL="../toml/toml.lvclass"/>
 		<Item Name="toml_edit.lvlib" Type="Library" URL="../toml_edit.lvlib"/>
 		<Item Name="test_set_inline_table_item.vi" Type="VI" URL="../test_set_inline_table_item.vi"/>
 		<Item Name="test_toml_reader.vi" Type="VI" URL="../test_toml_reader.vi"/>
@@ -35,14 +34,6 @@
 		<Item Name="Package Dependencies" Type="IIO Ladder Diagram">
 			<Property Name="NI.SortType" Type="Int">0</Property>
 			<Property Name="ShowPackages" Type="Bool">true</Property>
-			<Item Name="jki_lib_caraya" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
-			<Item Name="jki_lib_state_machine [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
-			<Item Name="labview_open_source_lib_epoch_datetime [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
-			<Item Name="oglib_array [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
-			<Item Name="oglib_error [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
-			<Item Name="oglib_file [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
-			<Item Name="oglib_lvdata [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
-			<Item Name="oglib_string" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
 		</Item>
 		<Item Name="Dependencies" Type="Dependencies">
 			<Item Name="user.lib" Type="Folder">
@@ -411,7 +402,7 @@
 				<Item Name="Path to URL.vi" Type="VI" URL="/&lt;vilib&gt;/printing/PathToURL.llb/Path to URL.vi"/>
 				<Item Name="Open URL in Default Browser (path).vi" Type="VI" URL="/&lt;vilib&gt;/Platform/browser.llb/Open URL in Default Browser (path).vi"/>
 				<Item Name="Open URL in Default Browser.vi" Type="VI" URL="/&lt;vilib&gt;/Platform/browser.llb/Open URL in Default Browser.vi"/>
-				<Item Name="Parse State Queue__jki_lib_state_machine.vi" Type="VI" URL="/&lt;vilib&gt;/addons/_JKI Toolkits/State Machine/_JKI_lib_State_Machine.llb/Parse State Queue__jki_lib_state_machine.vi"/>
+				<Item Name="Parse State Queue__JKI_lib_State_Machine.vi" Type="VI" URL="/&lt;vilib&gt;/addons/_JKI Toolkits/State Machine/_JKI_lib_State_Machine.llb/Parse State Queue__JKI_lib_State_Machine.vi"/>
 				<Item Name="Add State(s) to Queue__jki_lib_state_machine.vi" Type="VI" URL="/&lt;vilib&gt;/addons/_JKI Toolkits/State Machine/_JKI_lib_State_Machine.llb/Add State(s) to Queue__jki_lib_state_machine.vi"/>
 				<Item Name="imagedata.ctl" Type="VI" URL="/&lt;vilib&gt;/picture/picture.llb/imagedata.ctl"/>
 				<Item Name="NI_PackedLibraryUtility.lvlib" Type="Library" URL="/&lt;vilib&gt;/Utility/LVLibp/NI_PackedLibraryUtility.lvlib"/>
@@ -425,6 +416,7 @@
 				<Item Name="Assert Integer Type.vim" Type="VI" URL="/&lt;vilib&gt;/Utility/TypeAssert/Assert Integer Type.vim"/>
 			</Item>
 			<Item Name="dragon_toml_64.dll" Type="Document" URL="../dragon_toml_64.dll"/>
+			<Item Name="toml.lvclass" Type="LVClass" URL="../toml/toml.lvclass"/>
 		</Item>
 		<Item Name="Build Specifications" Type="Build"/>
 	</Item>
