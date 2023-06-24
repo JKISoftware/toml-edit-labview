@@ -499,6 +499,27 @@ pub extern "C" fn toml_edit_item_new_value_from_i64(integer: i64) -> *mut c_void
     Box::into_raw(item) as *mut c_void
 }
 
+// create a new Value::Boolean from a i8
+// takes a i8 as input
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_item_new_value_from_bool(boolean: i8) -> *mut c_void {
+    let boolean = match boolean {
+        1 => true,
+        0 => false,
+        _ => {
+            println!("Invalid boolean value");
+            return ptr::null_mut();
+        }
+    };
+
+    let item = toml_edit::value(boolean);
+
+    let item = Box::new(item);
+
+    return Box::into_raw(item) as *mut c_void;
+}
+
 // create a new, empty Value::InlineTable
 #[allow(dead_code)]
 #[no_mangle]
