@@ -496,6 +496,30 @@ pub extern "C" fn toml_edit_value_get_i64(
     return return_value;
 }
 
+// get a boolean typed Value from a value
+// takes a value as input
+// returns a i8 with 1 representing true, 0 representing false, and -1 representing an error
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_value_get_bool(
+    value: *mut c_void,
+) -> i8 {
+    let value = unsafe { &mut *(value as *mut Value) };
+
+    let value = match value {
+        Value::Boolean(value) => value,
+        _ => {
+            println!("Value is not a Boolean");
+            return -1;
+        }
+    };
+
+    let return_value = value.clone().into_value();
+
+    return return_value as i8;
+}
+
+
 // get an InlineTable typed Value from a value
 // takes a value as input and returns a raw pointer to a Table
 #[allow(dead_code)]
