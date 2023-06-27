@@ -49,6 +49,11 @@ pub extern "C" fn toml_edit_doc_from_string(toml_str: *const c_char) -> *mut c_v
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_to_string(doc: *mut c_void) -> *mut c_char {
+    // todo: add better error return
+    if doc.is_null() {
+        println!("Document pointer is null");
+        return CString::new("").unwrap().into_raw();
+    }
     let doc = unsafe { &mut *(doc as *mut Document) };
 
     let toml_str = match Document::to_string(doc) {
@@ -63,13 +68,17 @@ pub extern "C" fn toml_edit_doc_to_string(doc: *mut c_void) -> *mut c_char {
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // return a pointer to the root Table of a Document
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_get_root_table(doc: *mut c_void) -> *mut c_void {
+    if doc.is_null() {
+        println!("Document pointer is null");
+        return ptr::null_mut();
+    }
     let doc = unsafe { &mut *(doc as *mut Document) };
 
     let table = match doc.as_table() {
@@ -85,6 +94,10 @@ pub extern "C" fn toml_edit_doc_get_root_table(doc: *mut c_void) -> *mut c_void 
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_close(doc: *mut c_void) {
+    if doc.is_null() {
+        println!("Document pointer is null");
+        return;
+    }
     let doc = unsafe { Box::from_raw(doc as *mut Document) };
     drop(doc);
 }
@@ -93,6 +106,10 @@ pub extern "C" fn toml_edit_doc_close(doc: *mut c_void) {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_to_string(table: *mut c_void) -> *mut c_char {
+    if table.is_null() {
+        println!("Table pointer is null");
+        return CString::new("").unwrap().into_raw();
+    }
     let table = unsafe { &mut *(table as *mut Table) };
 
     let toml_str = match Table::to_string(table) {
@@ -107,13 +124,17 @@ pub extern "C" fn toml_edit_table_to_string(table: *mut c_void) -> *mut c_char {
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // convert a Table to an Item
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_to_item(table: *mut c_void) -> *mut c_void {
+    if table.is_null() {
+        println!("Table pointer is null");
+        return ptr::null_mut();
+    }
     let table = unsafe { &mut *(table as *mut Table) };
 
     let item = match Item::Table(table.clone()) {
@@ -129,6 +150,11 @@ pub extern "C" fn toml_edit_table_to_item(table: *mut c_void) -> *mut c_void {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_to_item(inline_table: *mut c_void) -> *mut c_void {
+    if inline_table.is_null() {
+        println!("InlineTable pointer is null");
+        return ptr::null_mut();
+    }
+
     let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let item = match toml_edit::value(inline_table.clone()) {
@@ -144,6 +170,11 @@ pub extern "C" fn toml_edit_inline_table_to_item(inline_table: *mut c_void) -> *
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_doc_list_tables(doc: *mut c_void) -> *mut c_char {
+    if doc.is_null() {
+        println!("Document pointer is null");
+        return CString::new("").unwrap().into_raw();
+    }
+
     let doc = unsafe { &mut *(doc as *mut Document) };
 
     let mut table_list = String::new();
@@ -160,7 +191,7 @@ pub extern "C" fn toml_edit_doc_list_tables(doc: *mut c_void) -> *mut c_char {
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // return a pointer to a Table, which can be used in other .dll functions
@@ -171,6 +202,10 @@ pub extern "C" fn toml_edit_doc_get_table(
     doc: *mut c_void,
     table_name: *const c_char,
 ) -> *mut c_void {
+    if doc.is_null() {
+        println!("Document pointer is null");
+        return ptr::null_mut();
+    }
     let doc = unsafe { &mut *(doc as *mut Document) };
     let table_name = unsafe { CStr::from_ptr(table_name).to_string_lossy().into_owned() };
 
@@ -196,6 +231,15 @@ pub extern "C" fn toml_edit_doc_set_item(
     key: *const c_char,
     item: *mut c_void,
 ) -> *mut c_void {
+    if doc.is_null() {
+        println!("Document is null");
+        return ptr::null_mut();
+    }
+    if item.is_null() {
+        println!("Item is null");
+        return ptr::null_mut();
+    }
+
     let doc = unsafe { &mut *(doc as *mut Document) };
     let key = unsafe { CStr::from_ptr(key).to_string_lossy().into_owned() };
     let item = unsafe { &mut *(item as *mut Item) };
@@ -208,6 +252,11 @@ pub extern "C" fn toml_edit_doc_set_item(
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_list_items(table: *mut c_void) -> *mut c_char {
+    if table.is_null() {
+        println!("Table is null");
+        return CString::new("").unwrap().into_raw();
+    }
+
     let table = unsafe { &mut *(table as *mut Table) };
 
     let mut item_list = String::new();
@@ -224,7 +273,7 @@ pub extern "C" fn toml_edit_table_list_items(table: *mut c_void) -> *mut c_char 
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // remove an item from a Table
@@ -232,6 +281,11 @@ pub extern "C" fn toml_edit_table_list_items(table: *mut c_void) -> *mut c_char 
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_remove_item(table: *mut c_void, key: *const c_char) -> u64 {
+    // todo: return -1 on error? need better error return.
+    if table.is_null() {
+        println!("Table is null");
+        return 0;
+    }
     let table = unsafe { &mut *(table as *mut Table) };
     let key = unsafe { CStr::from_ptr(key).to_string_lossy().into_owned() };
 
@@ -247,6 +301,10 @@ pub extern "C" fn toml_edit_table_remove_item(table: *mut c_void, key: *const c_
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_close(table: *mut c_void) {
+    if table.is_null() {
+        println!("Table is null");
+        return;
+    }
     let table = unsafe { Box::from_raw(table as *mut Table) };
     drop(table);
 }
@@ -259,15 +317,16 @@ pub extern "C" fn toml_edit_table_get_item(
     table: *mut c_void,
     item_name: *const c_char,
 ) -> *mut c_void {
+    if table.is_null() {
+        println!("Table is null");
+        return ptr::null_mut();
+    }
+
     let table = unsafe { &mut *(table as *mut Table) };
     let item_name = unsafe { CStr::from_ptr(item_name).to_string_lossy().into_owned() };
 
     let item = match table[item_name.as_str()].clone() {
         item => item,
-        // _ => {
-        //     println!("Unable to find item: {}", item_name);
-        //     return ptr::null_mut();
-        // }
     };
 
     let item = Box::new(item);
@@ -284,6 +343,15 @@ pub extern "C" fn toml_edit_table_set_item(
     key: *const c_char,
     item: *mut c_void,
 ) {
+    if table.is_null() {
+        println!("Table is null");
+        return;
+    }
+    if item.is_null() {
+        println!("Item is null");
+        return;
+    }
+
     let table = unsafe { &mut *(table as *mut Table) };
     let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
     let item = unsafe { &mut *(item as *mut Item) };
@@ -296,6 +364,11 @@ pub extern "C" fn toml_edit_table_set_item(
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_get_value_type(value: *mut c_void) -> *mut c_char {
+    if value.is_null() {
+        println!("Value is null");
+        return CString::new("None").unwrap().into_raw();
+    }
+
     let value = unsafe { &mut *(value as *mut Value) };
 
     let value_type = match value {
@@ -316,7 +389,7 @@ pub extern "C" fn toml_edit_get_value_type(value: *mut c_void) -> *mut c_char {
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // get the type of a Item
@@ -324,12 +397,11 @@ pub extern "C" fn toml_edit_get_value_type(value: *mut c_void) -> *mut c_char {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_item_get_type(item: *mut c_void) -> *mut c_char {
-
     // check if item has a null value
     if item.is_null() {
         let raw_string = match CString::new("None").unwrap().into_raw() {
             ptr if ptr.is_null() => {
-                println!("Unable to allocate memory for string");
+                println!("Item is Null");
                 return CString::new("").unwrap().into_raw();
             }
             ptr => ptr,
@@ -337,7 +409,6 @@ pub extern "C" fn toml_edit_item_get_type(item: *mut c_void) -> *mut c_char {
 
         return raw_string;
     }
-
 
     let item = unsafe { &mut *(item as *mut Item) };
 
@@ -356,7 +427,7 @@ pub extern "C" fn toml_edit_item_get_type(item: *mut c_void) -> *mut c_char {
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // get a value from a Item
@@ -364,6 +435,11 @@ pub extern "C" fn toml_edit_item_get_type(item: *mut c_void) -> *mut c_char {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_item_into_value(item: *mut c_void) -> *mut c_void {
+    if item.is_null() {
+        println!("Item is null");
+        return ptr::null_mut();
+    }
+
     let item = unsafe { &mut *(item as *mut Item) };
 
     let value = match item {
@@ -384,6 +460,11 @@ pub extern "C" fn toml_edit_item_into_value(item: *mut c_void) -> *mut c_void {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_item_into_table(item: *mut c_void) -> *mut c_void {
+    if item.is_null() {
+        println!("Item is null");
+        return ptr::null_mut();
+    }
+
     let item = unsafe { &mut *(item as *mut Item) };
 
     let table = match item {
@@ -404,6 +485,12 @@ pub extern "C" fn toml_edit_item_into_table(item: *mut c_void) -> *mut c_void {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_value_get_string(value: *mut c_void) -> *mut c_char {
+    // need a better error return
+    if value.is_null() {
+        println!("Value is null");
+        return CString::new("").unwrap().into_raw();
+    }
+
     let value = unsafe { &mut *(value as *mut Value) };
 
     let value = match value {
@@ -424,7 +511,7 @@ pub extern "C" fn toml_edit_value_get_string(value: *mut c_void) -> *mut c_char 
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // get a i64 typed Value from a value
@@ -432,6 +519,12 @@ pub extern "C" fn toml_edit_value_get_string(value: *mut c_void) -> *mut c_char 
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_value_get_i64(value: *mut c_void) -> i64 {
+    // we really need a better way to return an error code. e.g. 0 and -1 are valid values for i64
+    if value.is_null() {
+        println!("Value is null");
+        return 0;
+    }
+
     let value = unsafe { &mut *(value as *mut Value) };
 
     let value = match value {
@@ -453,6 +546,11 @@ pub extern "C" fn toml_edit_value_get_i64(value: *mut c_void) -> i64 {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_value_get_bool(value: *mut c_void) -> i8 {
+    if value.is_null() {
+        println!("Value is null");
+        return -1;
+    }
+
     let value = unsafe { &mut *(value as *mut Value) };
 
     let value = match value {
@@ -473,6 +571,11 @@ pub extern "C" fn toml_edit_value_get_bool(value: *mut c_void) -> i8 {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_value_get_inline_table(value: *mut c_void) -> *mut c_void {
+    if value.is_null() {
+        println!("Value is null");
+        return ptr::null_mut();
+    }
+
     let value = unsafe { &mut *(value as *mut Value) };
 
     let value = match value {
@@ -562,6 +665,10 @@ pub extern "C" fn toml_edit_table_new() -> *mut c_void {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_table_contains_item(table: *mut c_void, key: *const c_char) -> i64 {
+    if table.is_null() {
+        println!("Table is null");
+        return -1;
+    }
     let table = unsafe { &mut *(table as *mut Table) };
     let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
 
@@ -587,6 +694,10 @@ pub extern "C" fn toml_edit_inline_table_remove_item(
     inline_table: *mut c_void,
     item_name: *const c_char,
 ) -> u64 {
+    if inline_table.is_null() {
+        println!("InlineTable is null");
+        return 0;
+    }
     let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
     let item_name = unsafe { CStr::from_ptr(item_name).to_string_lossy().into_owned() };
 
@@ -606,6 +717,11 @@ pub extern "C" fn toml_edit_inline_table_contains_item(
     table: *mut c_void,
     key: *const c_char,
 ) -> i64 {
+    if table.is_null() {
+        println!("InlineTable is null");
+        return -1;
+    }
+
     let table = unsafe { &mut *(table as *mut InlineTable) };
     let key = unsafe { CStr::from_ptr(key).to_str().unwrap() };
 
@@ -617,6 +733,11 @@ pub extern "C" fn toml_edit_inline_table_contains_item(
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_list_items(inline_table: *mut c_void) -> *mut c_char {
+    if inline_table.is_null() {
+        println!("InlineTable is null");
+        return CString::new("").unwrap().into_raw();
+    }
+
     let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let mut return_string = String::new();
@@ -634,7 +755,7 @@ pub extern "C" fn toml_edit_inline_table_list_items(inline_table: *mut c_void) -
         ptr => ptr,
     };
 
-    return raw_string;
+    raw_string
 }
 
 // Get an value from a InlineTable
@@ -645,6 +766,11 @@ pub extern "C" fn toml_edit_inline_table_get_item(
     inline_table: *mut c_void,
     key: *const c_char,
 ) -> *mut c_void {
+    if inline_table.is_null() {
+        println!("InlineTable is null");
+        // return an empty string
+        return CString::new("").unwrap().into_raw() as *mut c_void;
+    }
     let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let key = match unsafe { CStr::from_ptr(key).to_str() } {
@@ -677,6 +803,14 @@ pub extern "C" fn toml_edit_inline_table_set_item(
     key: *const c_char,
     item: *mut c_void,
 ) {
+    if inline_table.is_null() {
+        println!("InlineTable is null");
+        return;
+    }
+    if item.is_null() {
+        println!("Item is null");
+        return;
+    }
     let inline_table = unsafe { &mut *(inline_table as *mut InlineTable) };
 
     let key = match unsafe { CStr::from_ptr(key).to_str() } {
@@ -715,6 +849,9 @@ pub extern "C" fn toml_edit_inline_table_set_item(
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_item_close(item: *mut c_void) {
+    if item.is_null() {
+        return;
+    }
     let item = unsafe { Box::from_raw(item as *mut Item) };
     drop(item);
 }
@@ -723,6 +860,9 @@ pub extern "C" fn toml_edit_item_close(item: *mut c_void) {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_value_close(value: *mut c_void) {
+    if value.is_null() {
+        return;
+    }
     let value = unsafe { Box::from_raw(value as *mut Value) };
     drop(value);
 }
@@ -731,6 +871,9 @@ pub extern "C" fn toml_edit_value_close(value: *mut c_void) {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_close(table: *mut c_void) {
+    if table.is_null() {
+        return;
+    }
     let table = unsafe { Box::from_raw(table as *mut InlineTable) };
     drop(table);
 }
@@ -739,12 +882,10 @@ pub extern "C" fn toml_edit_inline_table_close(table: *mut c_void) {
 // this *must* be called for every string returned from a function in this library
 #[no_mangle]
 pub extern "C" fn cstring_free_memory(s: *mut c_char) {
-    unsafe {
-        if s.is_null() {
-            return;
-        }
-        CString::from_raw(s)
-    };
+    if s.is_null() {
+        return;
+    }
+    unsafe { CString::from_raw(s) };
 }
 
 #[cfg(test)]
