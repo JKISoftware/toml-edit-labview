@@ -35,6 +35,14 @@
 		<Item Name="Package Dependencies" Type="IIO Ladder Diagram">
 			<Property Name="NI.SortType" Type="Int">0</Property>
 			<Property Name="ShowPackages" Type="Bool">true</Property>
+			<Item Name="jki_lib_caraya [marked as required but not called by project VIs]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="jki_lib_state_machine [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="labview_open_source_lib_epoch_datetime [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_array [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_error [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_file [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_lvdata [new requirement found]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
+			<Item Name="oglib_string [marked as required but not called by project VIs]" Type="{2DC17C6E-B9FF-4CBE-BC4B-3D45FE0534D9}"/>
 		</Item>
 		<Item Name="Dependencies" Type="Dependencies">
 			<Item Name="user.lib" Type="Folder">
@@ -332,6 +340,9 @@
 				<Item Name="Empty 1D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Empty 1D Array (CDB)__ogtk.vi"/>
 				<Item Name="Empty 1D Array (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Empty 1D Array (Boolean)__ogtk.vi"/>
 				<Item Name="Empty Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Empty Array__ogtk.vi"/>
+				<Item Name="Valid Path__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Valid Path__ogtk.vi"/>
+				<Item Name="Valid Path - Traditional__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Valid Path - Traditional__ogtk.vi"/>
+				<Item Name="Valid Path - Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Valid Path - Array__ogtk.vi"/>
 			</Item>
 			<Item Name="vi.lib" Type="Folder">
 				<Item Name="Clear Errors.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Clear Errors.vi"/>
@@ -415,6 +426,8 @@
 				<Item Name="NI_LVConfig.lvlib" Type="Library" URL="/&lt;vilib&gt;/Utility/config.llb/NI_LVConfig.lvlib"/>
 				<Item Name="8.6CompatibleGlobalVar.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/8.6CompatibleGlobalVar.vi"/>
 				<Item Name="Assert Integer Type.vim" Type="VI" URL="/&lt;vilib&gt;/Utility/TypeAssert/Assert Integer Type.vim"/>
+				<Item Name="Assert Same or Descendant Type.vim" Type="VI" URL="/&lt;vilib&gt;/Utility/TypeAssert/Assert Same or Descendant Type.vim"/>
+				<Item Name="Assert Real Numeric Type.vim" Type="VI" URL="/&lt;vilib&gt;/Utility/TypeAssert/Assert Real Numeric Type.vim"/>
 			</Item>
 			<Item Name="dragon_toml_64.dll" Type="Document" URL="../dragon_toml_64.dll"/>
 			<Item Name="toml.lvclass" Type="LVClass" URL="../toml/toml.lvclass"/>

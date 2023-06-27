@@ -324,6 +324,21 @@ pub extern "C" fn toml_edit_get_value_type(value: *mut c_void) -> *mut c_char {
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_item_get_type(item: *mut c_void) -> *mut c_char {
+
+    // check if item has a null value
+    if item.is_null() {
+        let raw_string = match CString::new("None").unwrap().into_raw() {
+            ptr if ptr.is_null() => {
+                println!("Unable to allocate memory for string");
+                return CString::new("").unwrap().into_raw();
+            }
+            ptr => ptr,
+        };
+
+        return raw_string;
+    }
+
+
     let item = unsafe { &mut *(item as *mut Item) };
 
     let item_type = match item {
