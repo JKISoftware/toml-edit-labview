@@ -1,5 +1,7 @@
 ﻿<?xml version='1.0' encoding='UTF-8'?>
 <Project Type="Project" LVVersion="20008000">
+	<Property Name="NI.LV.All.SourceOnly" Type="Bool">true</Property>
+	<Property Name="NI.Project.Description" Type="Str"></Property>
 	<Item Name="My Computer" Type="My Computer">
 		<Property Name="server.app.propertiesEnabled" Type="Bool">true</Property>
 		<Property Name="server.control.propertiesEnabled" Type="Bool">true</Property>
@@ -12,6 +14,7 @@
 		<Property Name="specify.custom.address" Type="Bool">false</Property>
 		<Item Name="tests" Type="Folder">
 			<Item Name="test.boolean_conversion.vi" Type="VI" URL="../tests/test.boolean_conversion.vi"/>
+			<Item Name="test.ini_to_object.vi" Type="VI" URL="../tests/test.ini_to_object.vi"/>
 			<Item Name="test.numeric_conversion.vi" Type="VI" URL="../tests/test.numeric_conversion.vi"/>
 		</Item>
 		<Item Name="configuration-data.lvclass" Type="LVClass" URL="../configuration-data/configuration-data.lvclass"/>
