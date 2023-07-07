@@ -69,17 +69,18 @@ jobs:
         chmod ugo+rx $FRAMEWORK_NAME.framework/Versions/A/$FRAMEWORK_NAME
         ln -s ./A ./$FRAMEWORK_NAME.framework/Versions/Current
         ln -s ./Versions/A/$FRAMEWORK_NAME ./$FRAMEWORK_NAME.framework
-        rm -rf $FRAMEWORK_NAME-${{ matrix.arch }}.framework.zip
-        zip -r $FRAMEWORK_NAME-${{ matrix.arch }}.framework.zip $FRAMEWORK_NAME.framework
+        rm -rf $FRAMEWORK_NAME.framework.zip
+        zip -r $FRAMEWORK_NAME.framework.zip $FRAMEWORK_NAME.framework
         popd
 
     - name: Run tests
       run: cargo test --verbose
       
     - name: Upload artifact
+      if: ${{ matrix.runs-on != 'macos-latest' }}
       uses: actions/upload-artifact@v3
       with:
-        name: shared-library
+        name: shared-library-${{ target }}
         if-no-files-found: error
         path: |
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.${{ matrix.shared-lib-extension }}
@@ -88,7 +89,7 @@ jobs:
       if: ${{ matrix.runs-on == 'macos-latest' }}
       uses: actions/upload-artifact@v3
       with:
-        name: shared-library
+        name: shared-library-${{ target }}
         if-no-files-found: error
         path: |
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.framework.zip
