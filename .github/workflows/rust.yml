@@ -36,11 +36,13 @@ jobs:
             runs-on: windows-latest
             shared-lib-extension: dll
             bitness: 32
-#           - target: x86_64-apple-darwin
-#             runs-on: macos-latest
-#             shared-lib-extension: dylib
-#             bitness: 64
+          - target: x86_64-apple-darwin
+            arch: x86_64
+            runs-on: macos-latest
+            shared-lib-extension: dylib
+            bitness: 64
           - target: aarch64-apple-darwin
+            arch: aarch64
             runs-on: macos-latest
             shared-lib-extension: dylib
             bitness: 64
@@ -54,7 +56,7 @@ jobs:
         pushd target/${{ matrix.target }}/${{ env.BUILD_TYPE }}
         mv *.${{ matrix.shared-lib-extension }} ${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
     - name: Bundle MacOS Framework
-      if: ${{ matrix.target == 'x86_64-apple-darwin' }}
+      if: ${{ matrix.runs-on == 'macos-latest' }}
       run: |
         BUILD_TYPE=${{ env.BUILD_TYPE }}
         SHARED_LIBARY_NAME=${{ env.SHARED_LIBRARY_NAME }}_${{ matrix.bitness }}.${{ matrix.shared-lib-extension }}
@@ -67,12 +69,13 @@ jobs:
         chmod ugo+rx $FRAMEWORK_NAME.framework/Versions/A/$FRAMEWORK_NAME
         ln -s ./A ./$FRAMEWORK_NAME.framework/Versions/Current
         ln -s ./Versions/A/$FRAMEWORK_NAME ./$FRAMEWORK_NAME.framework
-        rm -rf $FRAMEWORK_NAME.framework.zip
-        zip -r $FRAMEWORK_NAME.framework.zip $FRAMEWORK_NAME.framework
+        rm -rf $FRAMEWORK_NAME-${{ matrix.arch }}.framework.zip
+        zip -r $FRAMEWORK_NAME-${{ matrix.arch }}.framework.zip $FRAMEWORK_NAME.framework
         popd
 
     - name: Run tests
       run: cargo test --verbose
+      
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
@@ -82,10 +85,10 @@ jobs:
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.${{ matrix.shared-lib-extension }}
           
     - name: Upload MacOS Framework artifact
-      if: ${{ matrix.target == 'x86_64-apple-darwin' }}
+      if: ${{ matrix.runs-on == 'macos-latest' }}
       uses: actions/upload-artifact@v3
       with:
         name: shared-library
         if-no-files-found: error
         path: |
-          target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.framework
+          target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.framework.zip
