@@ -80,7 +80,7 @@ jobs:
       if: ${{ matrix.runs-on != 'macos-latest' }}
       uses: actions/upload-artifact@v3
       with:
-        name: shared-library-${{ target }}
+        name: shared-library-${{ matrix.target }}
         if-no-files-found: error
         path: |
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.${{ matrix.shared-lib-extension }}
@@ -89,7 +89,7 @@ jobs:
       if: ${{ matrix.runs-on == 'macos-latest' }}
       uses: actions/upload-artifact@v3
       with:
-        name: shared-library-${{ target }}
+        name: shared-library-${{ matrix.target }}
         if-no-files-found: error
         path: |
           target/${{ matrix.target }}/${{ env.BUILD_TYPE }}/*.framework.zip
