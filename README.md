@@ -4,6 +4,8 @@ A LabVIEW wrapper around the Rust [toml_edit](https://docs.rs/toml_edit/latest/t
 [![Rust](https://github.com/JKISoftware/toml-edit-labview/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/JKISoftware/toml-edit-labview/actions/workflows/rust.yml)
 ![LabVIEW Version](https://img.shields.io/badge/LabVIEW-2020%20SP1-%23E37725.svg?})
 
+At present, there are 32-bit and 64-bit Windows DLLs in the lv_src folder that are kept up-to-date. So, you should be able to clone the git repo and run the code in LabVIEW 2020 or greater on Windows.  On Mac or Linux, you can download the latest shared libraries from [the Releases](https://github.com/JKISoftware/toml-edit-labview/releases/tag/v0.0.1) or the [Actions artifacts](https://github.com/JKISoftware/toml-edit-labview/actions).  There's no VI Package yet, but that will happen in time.
+
 ## Current Status --> Alpha / Experimental
 There's a lot that's in flux and/or not currently working:
 - The shared library runs in the user interface thread (i.e. it's not multi-thread safe), but we're looking into it here -> [#2](https://github.com/JKISoftware/toml-edit-labview/issues/2)
