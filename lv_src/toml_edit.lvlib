@@ -6,10 +6,7 @@
 	<Property Name="NI.LV.All.SourceOnly" Type="Bool">true</Property>
 	<Item Name="support" Type="Folder">
 		<Property Name="NI.LibItem.Scope" Type="Int">2</Property>
-		<Item Name="free_c_string_at_memory_address.vi" Type="VI" URL="../support/free_c_string_at_memory_address.vi"/>
-		<Item Name="read_c_string_at_memory_address.vi" Type="VI" URL="../support/read_c_string_at_memory_address.vi"/>
-		<Item Name="support.read_and_free_array_multiline_string_at_address.vi" Type="VI" URL="../support/support.read_and_free_array_multiline_string_at_address.vi"/>
-		<Item Name="support.read_and_free_string_at_address.vi" Type="VI" URL="../support/support.read_and_free_string_at_address.vi"/>
+		<Item Name="support.read__multiline_string.vi" Type="VI" URL="../support/support.read__multiline_string.vi"/>
 	</Item>
 	<Item Name="Doc.lvclass" Type="LVClass" URL="../Doc/Doc.lvclass"/>
 	<Item Name="InlineTable.lvclass" Type="LVClass" URL="../InlineTable/InlineTable.lvclass"/>
