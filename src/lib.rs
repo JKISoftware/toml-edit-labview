@@ -9,8 +9,17 @@ use toml_edit::{Document, InlineTable, Item, Table, Value};
 // return any TOML parse error as a string using toml_edit::TomlError
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_doc_get_error(toml_str: *const c_char) -> *mut c_char {
+pub extern "C" fn toml_edit_doc_get_error(
+    toml_str: *const c_char,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     let toml_str = unsafe { CStr::from_ptr(toml_str).to_string_lossy().into_owned() };
+
+    // pass the length of the string back to the caller through the num_bytes pointer
+    let return_value_length = toml_str.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
+    }
 
     // try to parse the TOML string
     return match Document::from_str(&toml_str) {
@@ -48,7 +57,10 @@ pub extern "C" fn toml_edit_doc_from_string(toml_str: *const c_char) -> *mut c_v
 // return a toml string from a Document
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_doc_to_string(doc: *mut c_void) -> *mut c_char {
+pub extern "C" fn toml_edit_doc_to_string(
+    doc: *mut c_void,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     // todo: add better error return
     if doc.is_null() {
         println!("Document pointer is null");
@@ -59,6 +71,15 @@ pub extern "C" fn toml_edit_doc_to_string(doc: *mut c_void) -> *mut c_char {
     let toml_str = match Document::to_string(doc) {
         toml_str => toml_str,
     };
+
+
+    // pass the length of the string back to the caller through the num_bytes pointer
+
+    let return_value_length = toml_str.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
+    }
+
 
     let raw_string = match CString::new(toml_str).unwrap().into_raw() {
         ptr if ptr.is_null() => {
@@ -105,7 +126,10 @@ pub extern "C" fn toml_edit_doc_close(doc: *mut c_void) {
 // convert from a Table to a toml string
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_table_to_string(table: *mut c_void) -> *mut c_char {
+pub extern "C" fn toml_edit_table_to_string(
+    table: *mut c_void,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     if table.is_null() {
         println!("Table pointer is null");
         return CString::new("").unwrap().into_raw();
@@ -115,6 +139,12 @@ pub extern "C" fn toml_edit_table_to_string(table: *mut c_void) -> *mut c_char {
     let toml_str = match Table::to_string(table) {
         toml_str => toml_str,
     };
+
+    // pass the length of the string back to the caller through the num_bytes pointer
+    let return_value_length = toml_str.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
+    }
 
     let raw_string = match CString::new(toml_str).unwrap().into_raw() {
         ptr if ptr.is_null() => {
@@ -169,7 +199,10 @@ pub extern "C" fn toml_edit_inline_table_to_item(inline_table: *mut c_void) -> *
 // list the tables in a Document as a multi-line string
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_doc_list_tables(doc: *mut c_void) -> *mut c_char {
+pub extern "C" fn toml_edit_doc_list_tables(
+    doc: *mut c_void,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     if doc.is_null() {
         println!("Document pointer is null");
         return CString::new("").unwrap().into_raw();
@@ -181,6 +214,13 @@ pub extern "C" fn toml_edit_doc_list_tables(doc: *mut c_void) -> *mut c_char {
 
     for table in doc.as_table() {
         table_list.push_str(&format!("{}\n", table.0));
+    }
+
+    // pass the length of the string back to the caller through the num_bytes pointer
+
+    let return_value_length = table_list.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
     }
 
     let raw_string = match CString::new(table_list).unwrap().into_raw() {
@@ -363,7 +403,10 @@ pub extern "C" fn toml_edit_table_set_item(
 // takes a value as input
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_get_value_type(value: *mut c_void) -> *mut c_char {
+pub extern "C" fn toml_edit_get_value_type(
+    value: *mut c_void,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     if value.is_null() {
         println!("Value is null");
         return CString::new("None").unwrap().into_raw();
@@ -381,6 +424,12 @@ pub extern "C" fn toml_edit_get_value_type(value: *mut c_void) -> *mut c_char {
         Value::InlineTable(_) => "InlineTable",
     };
 
+    // pass the length of the string back to the caller through the num_bytes pointer
+    let return_value_length = value_type.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
+    }
+
     let raw_string = match CString::new(value_type).unwrap().into_raw() {
         ptr if ptr.is_null() => {
             println!("Unable to allocate memory for string");
@@ -396,7 +445,10 @@ pub extern "C" fn toml_edit_get_value_type(value: *mut c_void) -> *mut c_char {
 // takes a Item as input
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_item_get_type(item: *mut c_void) -> *mut c_char {
+pub extern "C" fn toml_edit_item_get_type(
+    item: *mut c_void,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     // check if item has a null value
     if item.is_null() {
         let raw_string = match CString::new("None").unwrap().into_raw() {
@@ -418,6 +470,12 @@ pub extern "C" fn toml_edit_item_get_type(item: *mut c_void) -> *mut c_char {
         Item::ArrayOfTables(_) => "ArrayOfTables",
         Item::Table(_) => "Table",
     };
+
+    // pass the length of the string back to the caller through the num_bytes pointer
+    let return_value_length = item_type.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
+    }
 
     let raw_string = match CString::new(item_type).unwrap().into_raw() {
         ptr if ptr.is_null() => {
@@ -481,10 +539,17 @@ pub extern "C" fn toml_edit_item_into_table(item: *mut c_void) -> *mut c_void {
 }
 
 // get a String typed Value from a value
-// takes a value as input
+// inputs:
+//  - a `value` pointer to a Value
+//  - a `num_bytes` pointer to a u32 that this function will set to the number of bytes in the string
+// returns:
+//  - a pointer to a c_char that is the string
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_value_get_string(value: *mut c_void) -> *mut c_char {
+pub extern "C" fn toml_edit_value_get_string(
+    value: *mut c_void,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     // need a better error return
     if value.is_null() {
         println!("Value is null");
@@ -501,7 +566,18 @@ pub extern "C" fn toml_edit_value_get_string(value: *mut c_void) -> *mut c_char 
         }
     };
 
+
+    // now let's prepare a return string for the caller
+
     let return_value = value.clone().into_value();
+
+
+    // pass the length of the string back to the caller through the num_bytes pointer
+
+    let return_value_length = return_value.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
+    }
 
     let raw_string = match CString::new(return_value).unwrap().into_raw() {
         ptr if ptr.is_null() => {
@@ -732,7 +808,10 @@ pub extern "C" fn toml_edit_inline_table_contains_item(
 // takes a InlineTable as input
 #[allow(dead_code)]
 #[no_mangle]
-pub extern "C" fn toml_edit_inline_table_list_items(inline_table: *mut c_void) -> *mut c_char {
+pub extern "C" fn toml_edit_inline_table_list_items(
+    inline_table: *mut c_void,
+    num_bytes: *mut u32,
+) -> *mut c_char {
     if inline_table.is_null() {
         println!("InlineTable is null");
         return CString::new("").unwrap().into_raw();
@@ -745,6 +824,12 @@ pub extern "C" fn toml_edit_inline_table_list_items(inline_table: *mut c_void) -
     for (key, _) in inline_table.iter() {
         return_string.push_str(key);
         return_string.push_str("\n");
+    }
+
+    // pass the length of the string back to the caller through the num_bytes pointer
+    let return_value_length = return_string.len() as u32;
+    unsafe {
+        *num_bytes = return_value_length;
     }
 
     let raw_string = match CString::new(return_string).unwrap().into_raw() {
@@ -885,7 +970,7 @@ pub extern "C" fn cstring_free_memory(s: *mut c_char) {
     if s.is_null() {
         return;
     }
-    unsafe { CString::from_raw(s) };
+    unsafe { let _ = CString::from_raw(s); };
 }
 
 #[cfg(test)]
