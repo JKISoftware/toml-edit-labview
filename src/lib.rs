@@ -111,6 +111,25 @@ pub extern "C" fn toml_edit_doc_get_root_table(doc: *mut c_void) -> *mut c_void 
     Box::into_raw(table) as *mut c_void
 }
 
+#[allow(dead_code)]
+#[no_mangle]
+pub extern "C" fn toml_edit_doc_remove_item_from_root_table(doc: *mut c_void, key: *const c_char) -> u64 {
+    if doc.is_null() {
+        println!("Document pointer is null");
+        return 0;
+    }
+    let doc = unsafe { &mut *(doc as *mut Document) };
+    let key = unsafe { CStr::from_ptr(key).to_string_lossy().into_owned() };
+
+    return if doc.as_table().contains_key(key.as_str()) {
+        doc.as_table_mut().remove(key.as_str());
+        1
+    } else {
+        0
+    };
+}
+
+
 // Close a Document and free the memory
 #[allow(dead_code)]
 #[no_mangle]
