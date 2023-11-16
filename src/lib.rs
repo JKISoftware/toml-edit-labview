@@ -81,15 +81,7 @@ pub extern "C" fn toml_edit_doc_to_string(
     }
 
 
-    let raw_string = match CString::new(toml_str).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        }
-        ptr => ptr,
-    };
-
-    raw_string
+    string_to_cstring_ptr(&toml_str)
 }
 
 // return a pointer to the root Table of a Document
@@ -165,15 +157,7 @@ pub extern "C" fn toml_edit_table_to_string(
         *num_bytes = return_value_length;
     }
 
-    let raw_string = match CString::new(toml_str).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        }
-        ptr => ptr,
-    };
-
-    raw_string
+    string_to_cstring_ptr(&toml_str)
 }
 
 // convert a Table to an Item
@@ -242,14 +226,17 @@ pub extern "C" fn toml_edit_doc_list_tables(
         *num_bytes = return_value_length;
     }
 
-    let raw_string = match CString::new(table_list).unwrap().into_raw() {
+    string_to_cstring_ptr(&table_list)
+}
+
+fn string_to_cstring_ptr(s: &str) -> *mut c_char {
+    let raw_string = match CString::new(s).unwrap().into_raw() {
         ptr if ptr.is_null() => {
             println!("Unable to allocate memory for string");
             return CString::new("").unwrap().into_raw();
         }
         ptr => ptr,
     };
-
     raw_string
 }
 
@@ -324,15 +311,7 @@ pub extern "C" fn toml_edit_table_list_items(table: *mut c_void) -> *mut c_char 
         item_list.push_str(&format!("{}\n", item.0));
     }
 
-    let raw_string = match CString::new(item_list).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        }
-        ptr => ptr,
-    };
-
-    raw_string
+    string_to_cstring_ptr(&item_list)
 }
 
 // remove an item from a Table
@@ -449,15 +428,7 @@ pub extern "C" fn toml_edit_get_value_type(
         *num_bytes = return_value_length;
     }
 
-    let raw_string = match CString::new(value_type).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        }
-        ptr => ptr,
-    };
-
-    raw_string
+    string_to_cstring_ptr(value_type)
 }
 
 // get the type of a Item
@@ -496,15 +467,7 @@ pub extern "C" fn toml_edit_item_get_type(
         *num_bytes = return_value_length;
     }
 
-    let raw_string = match CString::new(item_type).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        }
-        ptr => ptr,
-    };
-
-    raw_string
+    string_to_cstring_ptr(item_type)
 }
 
 // get a value from a Item
@@ -598,15 +561,7 @@ pub extern "C" fn toml_edit_value_get_string(
         *num_bytes = return_value_length;
     }
 
-    let raw_string = match CString::new(return_value).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        }
-        ptr => ptr,
-    };
-
-    raw_string
+    string_to_cstring_ptr(&return_value)
 }
 
 // get a i64 typed Value from a value
@@ -823,7 +778,7 @@ pub extern "C" fn toml_edit_inline_table_contains_item(
     return if table.contains_key(key) { 1 } else { 0 };
 }
 
-// Return a multi-line string of the keynames in an InlineTable
+// Return a multi-line string of the key names in an InlineTable
 // takes a InlineTable as input
 #[allow(dead_code)]
 #[no_mangle]
@@ -851,19 +806,11 @@ pub extern "C" fn toml_edit_inline_table_list_items(
         *num_bytes = return_value_length;
     }
 
-    let raw_string = match CString::new(return_string).unwrap().into_raw() {
-        ptr if ptr.is_null() => {
-            println!("Unable to allocate memory for string");
-            return CString::new("").unwrap().into_raw();
-        }
-        ptr => ptr,
-    };
-
-    raw_string
+    string_to_cstring_ptr(&return_string)
 }
 
 // Get an value from a InlineTable
-// takes a InlineTable as input and a *const c_char as the keyname
+// takes a InlineTable as input and a *const c_char as the key name
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_get_item(
@@ -899,7 +846,7 @@ pub extern "C" fn toml_edit_inline_table_get_item(
 }
 
 // Set an value in an InlineTable
-// takes a InlineTable as input and a *const c_char as the keyname
+// takes a InlineTable as input and a *const c_char as the key name
 #[allow(dead_code)]
 #[no_mangle]
 pub extern "C" fn toml_edit_inline_table_set_item(
